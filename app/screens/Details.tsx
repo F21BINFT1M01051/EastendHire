@@ -15,19 +15,34 @@ import { COLORS } from "../theme/constants";
 export default function DetailsScreen({ route, navigation }) {
   const { data } = route.params;
 
-  const Row = ({ icon, label, value }) => (
-    <View style={styles.row}>
-      <Ionicons
-        name={icon}
-        size={RFPercentage(2)}
-        color={COLORS.gray4}
-        style={styles.icon}
-      />
-      <Text style={styles.label}>
-        {label}: <Text style={styles.value}>{value}</Text>
-      </Text>
-    </View>
-  );
+  const Row = ({ icon, label, value }) => {
+    const lowerValue = value?.toLowerCase();
+    const showStatus = lowerValue === "pass" || lowerValue === "fail";
+
+    return (
+      <View style={styles.row}>
+        <Ionicons
+          name={icon}
+          size={RFPercentage(2.2)}
+          color={COLORS.gray4}
+          style={styles.icon}
+        />
+
+        <Text style={styles.label}>
+          {label}: <Text style={styles.value}>{value}</Text>
+        </Text>
+
+        {showStatus && (
+          <Ionicons
+            name={lowerValue === "pass" ? "checkmark-circle" : "close-circle"}
+            size={RFPercentage(2.5)}
+            color={lowerValue === "pass" ? COLORS.black : COLORS.gray}
+            style={styles.statusIcon}
+          />
+        )}
+      </View>
+    );
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -48,7 +63,7 @@ export default function DetailsScreen({ route, navigation }) {
         <Row icon="calendar-outline" label="Date" value={data.date} />
         <Row
           icon="car-outline"
-          label="Registration"
+          label="Registration No"
           value={data.registration}
         />
         <Row icon="speedometer-outline" label="Brakes" value={data.brakes} />
@@ -68,7 +83,7 @@ export default function DetailsScreen({ route, navigation }) {
         <View style={[styles.row, { marginBottom: RFPercentage(0.9) }]}>
           <Ionicons
             name="chatbubble-ellipses-outline"
-            size={22}
+            size={RFPercentage(2.2)}
             color={COLORS.gray4}
             style={styles.icon}
           />
@@ -102,19 +117,22 @@ const styles = StyleSheet.create({
     marginRight: RFPercentage(0.9),
   },
   label: {
-    fontSize: RFPercentage(1.8),
+    fontSize: RFPercentage(1.9),
     fontFamily: "SemiBold",
     color: COLORS.gray4,
   },
   value: {
     fontFamily: "Regular",
     color: COLORS.gray3,
-    fontSize: RFPercentage(1.7),
+    fontSize: RFPercentage(1.8),
   },
   comment: {
-    fontSize: RFPercentage(1.7),
+    fontSize: RFPercentage(1.8),
     color: COLORS.gray3,
     lineHeight: 22,
     fontFamily: "Regular",
+  },
+  statusIcon: {
+    marginLeft: RFPercentage(1.5),
   },
 });

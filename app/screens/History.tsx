@@ -44,7 +44,7 @@ export default function History({ navigation }) {
     >
       <View>
         <Text style={styles.date}>{item.date}</Text>
-        <Text style={styles.registration}>Reg: {item.registration}</Text>
+        <Text style={styles.registration}>Vehicle Registration: {item.registration}</Text>
       </View>
 
       <TouchableOpacity activeOpacity={0.8}>
@@ -59,7 +59,7 @@ export default function History({ navigation }) {
 
   return (
     <LinearGradient
-      colors={[COLORS.white, COLORS.white2, COLORS.white3]}
+      colors={[COLORS.white, COLORS.white]}
       style={styles.container}
     >
       <StatusBar barStyle="dark-content" backgroundColor="transparent" />
@@ -97,19 +97,19 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
     borderWidth: 1,
-    borderBottomWidth: RFPercentage(0.6),
+    borderBottomWidth: RFPercentage(0.5),
     borderColor: "rgba(235, 235, 235, 1)",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
   date: {
-    fontSize: RFPercentage(1.8),
+    fontSize: RFPercentage(1.9),
     fontFamily: "SemiBold",
     color: COLORS.black,
   },
   registration: {
-    fontSize: RFPercentage(1.7),
+    fontSize: RFPercentage(1.8),
     color: COLORS.gray2,
     marginTop: RFPercentage(0.7),
     fontFamily: "Regular",

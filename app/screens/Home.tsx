@@ -10,6 +10,9 @@ import {
   Platform,
   KeyboardAvoidingView,
   Image,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Modal,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { RFPercentage } from "react-native-responsive-fontsize";
@@ -29,6 +32,7 @@ export default function HomeScreen() {
   const [seatBelt, setSeatBelt] = useState(null);
   const [handBrake, setHandBrake] = useState(null);
   const [comments, setComments] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const today = new Date().toLocaleDateString("en-US", {
     month: "long",
@@ -43,6 +47,10 @@ export default function HomeScreen() {
     setSeatBelt(null);
     setHandBrake(null);
     setComments("");
+  };
+
+  const handleSave = () => {
+    setShowSuccess(true);
   };
 
   const renderOption = (label, state, setState, iconName, iconType) => {
@@ -106,7 +114,11 @@ export default function HomeScreen() {
             onPress={() => setState("fail")}
           >
             {state === "fail" && (
-              <Ionicons name="close" size={RFPercentage(2.3)} color={COLORS.white} />
+              <Ionicons
+                name="close"
+                size={RFPercentage(2.3)}
+                color={COLORS.white}
+              />
             )}
             <Text
               style={[
@@ -123,113 +135,151 @@ export default function HomeScreen() {
   };
 
   return (
-    <LinearGradient
-      colors={[COLORS.white, COLORS.white2, COLORS.white3]}
-      style={{ flex: 1 }}
-    >
-      <StatusBar
-        barStyle="dark-content"
-        translucent
-        backgroundColor="transparent"
-      />
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.container}
-          showsVerticalScrollIndicator={false}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <>
+        <LinearGradient
+          colors={[COLORS.white, COLORS.white]}
+          style={{ flex: 1 }}
         >
-          {/* Header Section */}
-          <View style={styles.header}>
-            <View style={styles.avatarContainer}>
-              <Image
-                source={IMAGES.img}
-                resizeMode="cover"
-                style={styles.avatar}
+          <StatusBar
+            barStyle="dark-content"
+            translucent
+            backgroundColor="transparent"
+          />
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+          >
+            <ScrollView
+              contentContainerStyle={styles.container}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="always"
+            >
+              {/* Header Section */}
+              <View style={styles.header}>
+                <View style={styles.avatarContainer}>
+                  <Image
+                    source={IMAGES.img}
+                    resizeMode="cover"
+                    style={styles.avatar}
+                  />
+                </View>
+                <Text style={styles.greeting}>Welcome!</Text>
+              </View>
+
+              <Text style={styles.date}>Today's Date: <Text style={{fontFamily:"Medium"}}>{today}</Text></Text>
+
+              {/* Vehicle Registration */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Vehicle Registration</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter registration number"
+                  value={registration}
+                  onChangeText={setRegistration}
+                  placeholderTextColor={COLORS.placholder}
+                  selectionColor={COLORS.black}
+                />
+              </View>
+
+              {/* Checklist Items */}
+              <Text style={styles.inputLabel}>
+                Inspection Report – Choose One
+              </Text>
+              {renderOption(
+                "Brakes",
+                brakes,
+                setBrakes,
+                "car-brake-abs",
+                "MaterialCommunityIcons"
+              )}
+              {renderOption(
+                "Lights",
+                lights,
+                setLights,
+                "car-parking-lights",
+                "MaterialCommunityIcons"
+              )}
+              {renderOption(
+                "Seat Belt",
+                seatBelt,
+                setSeatBelt,
+                "seatbelt",
+                "MaterialCommunityIcons"
+              )}
+              {renderOption(
+                "Hand Brake",
+                handBrake,
+                setHandBrake,
+                "car-brake-retarder",
+                "MaterialCommunityIcons"
+              )}
+              {/* Comments */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Comments / Feedback</Text>
+                <TextInput
+                  style={[styles.input, styles.commentsBox]}
+                  placeholder="Add any additional notes here"
+                  value={comments}
+                  onChangeText={setComments}
+                  multiline
+                  placeholderTextColor={COLORS.placholder}
+                  selectionColor={COLORS.black}
+                />
+              </View>
+
+              {/* Buttons */}
+              <View style={styles.btnRow}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={[styles.btn, styles.saveBtn]}
+                  onPress={handleSave}
+                >
+                  <Text style={styles.btnText}>Save</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={[styles.btn, styles.clearBtn]}
+                  onPress={handleClear}
+                >
+                  <Text style={styles.btnText}>Clear All</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </LinearGradient>
+
+        <Modal
+          visible={showSuccess}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowSuccess(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Ionicons
+                name="checkmark-circle"
+                size={60}
+                color={COLORS.black}
+                style={{ marginBottom: 15 }}
               />
+              <Text style={styles.modalTitle}>Saved Successfully!</Text>
+              <Text style={styles.modalMessage}>
+                Your inspection details have been saved.
+              </Text>
+
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => setShowSuccess(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalButtonText}>OK</Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.greeting}>Hi, Sophia Elizabeth</Text>
           </View>
-
-          <Text style={styles.date}>{today}</Text>
-
-          {/* Vehicle Registration */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Vehicle Registration</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter registration number"
-              value={registration}
-              onChangeText={setRegistration}
-              placeholderTextColor={COLORS.placholder}
-              selectionColor={COLORS.black}
-            />
-          </View>
-
-          {/* Checklist Items */}
-          <Text style={styles.inputLabel}>Inspection Checklist</Text>
-          {renderOption(
-            "Brakes",
-            brakes,
-            setBrakes,
-            "car-brake-abs",
-            "MaterialCommunityIcons"
-          )}
-          {renderOption(
-            "Lights",
-            lights,
-            setLights,
-            "car-parking-lights",
-            "MaterialCommunityIcons"
-          )}
-          {renderOption(
-            "Seat Belt",
-            seatBelt,
-            setSeatBelt,
-            "seatbelt",
-            "MaterialCommunityIcons"
-          )}
-          {renderOption(
-            "Hand Brake",
-            handBrake,
-            setHandBrake,
-            "car-brake-retarder",
-            "MaterialCommunityIcons"
-          )}
-          {/* Comments */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Comments / Feedback</Text>
-            <TextInput
-              style={[styles.input, styles.commentsBox]}
-              placeholder="Add any additional notes here"
-              value={comments}
-              onChangeText={setComments}
-              multiline
-              placeholderTextColor={COLORS.placholder}
-              selectionColor={COLORS.black}
-            />
-          </View>
-
-          {/* Buttons */}
-          <View style={styles.btnRow}>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[styles.btn, styles.saveBtn]}
-            >
-              <Text style={styles.btnText}>Save</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[styles.btn, styles.clearBtn]}
-              onPress={handleClear}
-            >
-              <Text style={styles.btnText}>Clear All</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </LinearGradient>
+        </Modal>
+      </>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -237,7 +287,7 @@ const styles = StyleSheet.create({
   container: {
     paddingTop: RFPercentage(7),
     paddingHorizontal: RFPercentage(3),
-    paddingBottom: RFPercentage(12),
+    paddingBottom: RFPercentage(28),
   },
   header: {
     flexDirection: "row",
@@ -262,12 +312,12 @@ const styles = StyleSheet.create({
   greeting: {
     color: COLORS.black,
     fontFamily: "Headline",
-    fontSize: RFPercentage(2),
+    fontSize: RFPercentage(2.2),
     marginLeft: RFPercentage(1.5),
   },
   date: {
     fontSize: RFPercentage(1.8),
-    color: COLORS.gray2,
+    color: COLORS.gray3,
     marginBottom: RFPercentage(3),
     fontFamily: "SemiBold",
   },
@@ -277,7 +327,7 @@ const styles = StyleSheet.create({
     marginBottom: RFPercentage(1.5),
   },
   sectionTitle: {
-    fontSize: RFPercentage(2),
+    fontSize: RFPercentage(2.2),
     color: COLORS.gray3,
     fontFamily: "SemiBold",
     marginBottom: RFPercentage(2),
@@ -286,7 +336,7 @@ const styles = StyleSheet.create({
     marginBottom: RFPercentage(2.5),
   },
   inputLabel: {
-    fontSize: RFPercentage(1.7),
+    fontSize: RFPercentage(1.9),
     color: COLORS.gray4,
     fontFamily: "SemiBold",
     marginBottom: RFPercentage(1),
@@ -303,7 +353,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
-    elevation: 2,
+    elevation: 1,
     borderWidth: 1,
     borderColor: COLORS.lightwhite,
   },
@@ -340,7 +390,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor:COLORS.white4,
+    backgroundColor: COLORS.white4,
     borderRadius: 8,
     paddingVertical: RFPercentage(1.5),
     gap: 6,
@@ -349,15 +399,15 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.black,
   },
   failSelected: {
-    backgroundColor:  COLORS.black,
+    backgroundColor: COLORS.black,
   },
   optionText: {
-    color:  COLORS.gray2,
+    color: COLORS.gray2,
     fontSize: RFPercentage(1.7),
     fontFamily: "Medium",
   },
   selectedText: {
-    color:  COLORS.white,
+    color: COLORS.white,
   },
   btnRow: {
     flexDirection: "row",
@@ -376,13 +426,49 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   saveBtn: {
-    backgroundColor:  COLORS.black,
+    backgroundColor: COLORS.black,
   },
   clearBtn: {
     backgroundColor: "#c8c5c5ff",
   },
   btnText: {
-    color:  COLORS.white,
+    color: COLORS.white,
+    fontSize: RFPercentage(1.8),
+    fontFamily: "Medium",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: "80%",
+    backgroundColor: COLORS.white,
+    padding: RFPercentage(3),
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: RFPercentage(2.3),
+    fontFamily: "SemiBold",
+    color: COLORS.black,
+    marginBottom: RFPercentage(1),
+  },
+  modalMessage: {
+    fontSize: RFPercentage(1.8),
+    color: COLORS.gray3,
+    textAlign: "center",
+    marginBottom: RFPercentage(3),
+  },
+  modalButton: {
+    backgroundColor: COLORS.black,
+    paddingVertical: RFPercentage(1.2),
+    paddingHorizontal: RFPercentage(5),
+    borderRadius: 50,
+  },
+  modalButtonText: {
+    color: COLORS.white,
     fontSize: RFPercentage(1.8),
     fontFamily: "Medium",
   },

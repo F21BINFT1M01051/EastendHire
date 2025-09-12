@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     flexDirection: "row",
-    height: RFPercentage(6),
+    height: RFPercentage(6.5),
     borderRadius: RFPercentage(1.6),
     backgroundColor: COLORS.input,
     shadowColor: "#000",
@@ -85,12 +85,13 @@ const styles = StyleSheet.create({
   },
   input: {
     width: "90%",
-    height: RFPercentage(5.8),
+    height: RFPercentage(6),
     paddingHorizontal: RFPercentage(1.5),
     color: COLORS.black,
     borderRadius: RFPercentage(1.6),
     fontFamily: "Regular",
     fontSize: RFPercentage(1.7),
+   top:RFPercentage(0.2)
   },
   eyeBtn: {},
 });

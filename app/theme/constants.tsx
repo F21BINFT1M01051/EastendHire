@@ -1,5 +1,5 @@
 export const IMAGES = {
-  onBoarding: require("../../assets/onBoarding.png"),
+  onBoarding: require("../../assets/vv.png"),
   logo: require("../../assets/logo22.png"),
   img: require("../../assets/img.jpg"),
   anim: require("../../assets/anim.png"),

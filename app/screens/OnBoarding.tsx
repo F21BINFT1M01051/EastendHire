@@ -15,7 +15,7 @@ import PrimaryButton from "../components/PrimaryButton";
 export default function Onboarding({ navigation }) {
   return (
     <LinearGradient
-      colors={[COLORS.white, COLORS.white2, COLORS.white3]}
+      colors={[COLORS.white, COLORS.white]}
       style={styles.container}
     >
       <StatusBar
@@ -30,10 +30,10 @@ export default function Onboarding({ navigation }) {
       />
       <Image
         source={IMAGES.onBoarding}
-        resizeMode="contain"
+        resizeMode="cover"
         style={{
           width: RFPercentage(50),
-          height: RFPercentage(30),
+          height: RFPercentage(25),
           marginTop: RFPercentage(5),
         }}
       />
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     fontSize: RFPercentage(3),
     color: COLORS.black,
     textAlign: "center",
-    marginTop: RFPercentage(5),
+    marginTop: RFPercentage(8),
     fontFamily: "Headline",
   },
   subtitle: {

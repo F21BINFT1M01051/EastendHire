@@ -7,6 +7,8 @@ import {
   Image,
   TouchableOpacity,
   Alert,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { RFPercentage } from "react-native-responsive-fontsize";
@@ -20,55 +22,57 @@ const ForgetPassword = ({ navigation }) => {
   const [email, setEmail] = useState("");
 
   return (
-    <LinearGradient
-      colors={[COLORS.white, COLORS.white2, COLORS.white3]}
-      style={styles.gradient}
-    >
-      <StatusBar
-        barStyle="dark-content"
-        translucent
-        backgroundColor="transparent"
-      />
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <LinearGradient
+        colors={[COLORS.white, COLORS.white]}
+        style={styles.gradient}
+      >
+        <StatusBar
+          barStyle="dark-content"
+          translucent
+          backgroundColor="transparent"
+        />
 
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          >
-            <Feather
-              name="chevron-left"
-              size={RFPercentage(3)}
-              color={COLORS.black}
-            />
-          </TouchableOpacity>
-          <Text style={styles.headerText}>Reset Password</Text>
-        </View>
-
-        {/* Input Field */}
-        <View style={styles.inputWrapper}>
-          <InputField
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Enter Your Email"
-            icon={(hasValue) => (
-              <MaterialIcons
-                name="email"
-                size={RFPercentage(2)}
-                color={hasValue ? COLORS.black : COLORS.gray}
+        <View style={styles.container}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => navigation.goBack()}
+              style={styles.backButton}
+            >
+              <Feather
+                name="chevron-left"
+                size={RFPercentage(3.3)}
+                color={COLORS.black}
               />
-            )}
-          />
-        </View>
+            </TouchableOpacity>
+            <Text style={styles.headerText}>Reset Password</Text>
+          </View>
 
-        {/* Button */}
-        <View style={styles.buttonWrapper}>
-          <PrimaryButton title="Send Link" onPress={() => {}} />
+          {/* Input Field */}
+          <View style={styles.inputWrapper}>
+            <InputField
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Enter Your Email"
+              icon={(hasValue) => (
+                <MaterialIcons
+                  name="email"
+                  size={RFPercentage(2)}
+                  color={hasValue ? COLORS.black : COLORS.gray}
+                />
+              )}
+            />
+          </View>
+
+          {/* Button */}
+          <View style={styles.buttonWrapper}>
+            <PrimaryButton title="Send Link" onPress={() => {}} />
+          </View>
         </View>
-      </View>
-    </LinearGradient>
+      </LinearGradient>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -97,7 +101,7 @@ const styles = StyleSheet.create({
   headerText: {
     textAlign: "center",
     fontFamily: "Bold",
-    fontSize: RFPercentage(2.2),
+    fontSize: RFPercentage(2.5),
   },
 
   inputWrapper: {

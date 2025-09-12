@@ -47,7 +47,7 @@ const EditProfile = ({ navigation }) => {
 
   return (
     <LinearGradient
-      colors={[COLORS.white, COLORS.white2, COLORS.white3]}
+      colors={[COLORS.white, COLORS.white]}
       style={styles.gradient}
     >
       <StatusBar
@@ -64,7 +64,11 @@ const EditProfile = ({ navigation }) => {
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           >
-            <Feather name="chevron-left" size={RFPercentage(3)} color={COLORS.black} />
+            <Feather
+              name="chevron-left"
+              size={RFPercentage(3)}
+              color={COLORS.black}
+            />
           </TouchableOpacity>
           <Text style={styles.headerText}>Edit Profile</Text>
         </View>
@@ -140,11 +144,11 @@ const styles = StyleSheet.create({
   headerText: {
     textAlign: "center",
     fontFamily: "Bold",
-    fontSize: RFPercentage(2.2),
+    fontSize: RFPercentage(2.5),
   },
   imageContainer: {
-    width: RFPercentage(12),
-    height: RFPercentage(12),
+    width: RFPercentage(16),
+    height: RFPercentage(16),
     alignItems: "center",
     justifyContent: "center",
     borderRadius: RFPercentage(100),
@@ -153,8 +157,8 @@ const styles = StyleSheet.create({
     marginTop: RFPercentage(5),
   },
   profileImage: {
-    width: RFPercentage(11.6),
-    height: RFPercentage(11.6),
+    width: RFPercentage(15.6),
+    height: RFPercentage(15.6),
     borderRadius: RFPercentage(100),
   },
   editIconContainer: {
@@ -162,8 +166,8 @@ const styles = StyleSheet.create({
     bottom: RFPercentage(-1.5),
   },
   editIcon: {
-    width: RFPercentage(3),
-    height: RFPercentage(3),
+    width: RFPercentage(4.3),
+    height: RFPercentage(4.3),
   },
   inputWrapper: {
     width: "100%",
@@ -172,7 +176,7 @@ const styles = StyleSheet.create({
   label: {
     color: COLORS.black,
     fontFamily: "SemiBold",
-    fontSize: RFPercentage(1.6),
+    fontSize: RFPercentage(1.8),
     marginBottom: RFPercentage(-0.7),
   },
   buttonWrapper: {

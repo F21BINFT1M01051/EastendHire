@@ -33,7 +33,7 @@ export default PrimaryButton;
 const styles = StyleSheet.create({
   buttonContainer: {
     width: "100%",
-    height: RFPercentage(5.5),
+    height: RFPercentage(6.5),
     alignItems: "center",
     justifyContent: "center",
     borderRadius: RFPercentage(2),
@@ -48,6 +48,6 @@ const styles = StyleSheet.create({
   title: {
     color: "white",
     fontFamily: "Medium",
-    fontSize: RFPercentage(1.8),
+    fontSize: RFPercentage(2),
   },
 });

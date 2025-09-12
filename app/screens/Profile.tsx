@@ -18,7 +18,7 @@ const Profile = () => {
   const navigation = useNavigation();
   return (
     <LinearGradient
-      colors={[COLORS.white, COLORS.white2, COLORS.white3]}
+      colors={[COLORS.white, COLORS.white]}
       style={styles.gradient}
     >
       <StatusBar
@@ -49,7 +49,11 @@ const Profile = () => {
             activeOpacity={0.8}
             onPress={() => navigation.navigate("EditProfile")}
           >
-            <Feather name="chevron-right" size={RFPercentage(2)} color={COLORS.gray3} />
+            <Feather
+              name="chevron-right"
+              size={RFPercentage(2)}
+              color={COLORS.gray3}
+            />
           </TouchableOpacity>
         </TouchableOpacity>
       </View>
@@ -76,8 +80,8 @@ const styles = StyleSheet.create({
     marginTop: RFPercentage(2),
   },
   imageContainer: {
-    width: RFPercentage(12),
-    height: RFPercentage(12),
+    width: RFPercentage(16),
+    height: RFPercentage(16),
     alignItems: "center",
     justifyContent: "center",
     borderRadius: RFPercentage(100),
@@ -86,8 +90,8 @@ const styles = StyleSheet.create({
     marginTop: RFPercentage(5),
   },
   profileImage: {
-    width: RFPercentage(11.6),
-    height: RFPercentage(11.6),
+    width: RFPercentage(15.6),
+    height: RFPercentage(15.6),
     borderRadius: RFPercentage(100),
   },
   name: {
@@ -99,7 +103,7 @@ const styles = StyleSheet.create({
   },
   editButton: {
     width: "100%",
-    height: RFPercentage(5.5),
+    height: RFPercentage(6.5),
     borderColor: COLORS.lightwhite,
     borderRadius: RFPercentage(1.2),
     paddingHorizontal: RFPercentage(2),
@@ -117,6 +121,6 @@ const styles = StyleSheet.create({
   editButtonText: {
     color: COLORS.gray3,
     fontFamily: "Medium",
-    fontSize: RFPercentage(1.6),
+    fontSize: RFPercentage(1.8),
   },
 });

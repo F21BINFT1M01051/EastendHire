@@ -1,5 +1,5 @@
 import React from "react";
-import { Animated, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Animated, Platform, StyleSheet, TouchableOpacity, View } from "react-native";
 import { CurvedBottomBarExpo } from "react-native-curved-bottom-bar";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import History from "../screens/History";
@@ -55,7 +55,7 @@ export default function BottomTabs() {
       type="DOWN"
       style={styles.bottomBar}
       shadowStyle={styles.shadow}
-      height={RFPercentage(7)}
+      height={Platform.OS === 'ios'  ? RFPercentage(8) : RFPercentage(9)}
       circleWidth={50}
       bgColor={COLORS.tab}
       initialRouteName="home"
@@ -64,7 +64,7 @@ export default function BottomTabs() {
       borderTopLeftRight
       screenOptions={{ headerShown: false }}
       renderCircle={({ selectedTab, navigate }) => (
-        <Animated.View style={styles.btnCircleUp}>
+        <Animated.View style={[styles.btnCircleUp,{bottom:Platform.OS === 'ios' ? 30 : 20}]}>
           <TouchableOpacity
             activeOpacity={0.8}
             style={styles.button}
