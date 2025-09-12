@@ -1,4 +1,10 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import React from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { RFPercentage } from "react-native-responsive-fontsize";
@@ -7,6 +13,7 @@ import { COLORS } from "../theme/constants";
 interface Props {
   title: string;
   onPress: () => void;
+  loader?: boolean;
 }
 
 const PrimaryButton = (props: Props) => {
@@ -22,7 +29,11 @@ const PrimaryButton = (props: Props) => {
         end={{ x: 0.5, y: 1 }}
         style={styles.gradient}
       >
-        <Text style={styles.title}>{props.title}</Text>
+        {props.loader ? (
+          <ActivityIndicator size={"small"} color={COLORS.white} />
+        ) : (
+          <Text style={styles.title}>{props.title}</Text>
+        )}
       </LinearGradient>
     </TouchableOpacity>
   );

@@ -35,7 +35,7 @@ export default function DetailsScreen({ route, navigation }) {
         {showStatus && (
           <Ionicons
             name={lowerValue === "pass" ? "checkmark-circle" : "close-circle"}
-            size={RFPercentage(2.5)}
+            size={RFPercentage(3)}
             color={lowerValue === "pass" ? COLORS.black : COLORS.gray}
             style={styles.statusIcon}
           />

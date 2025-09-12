@@ -20,10 +20,55 @@ import InputField from "../components/InputField";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Fontisto from "@expo/vector-icons/Fontisto";
 import { COLORS } from "../theme/constants";
+import * as yup from "yup";
+import { Formik } from "formik";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth, db } from "../../firebase";
+import { showToast } from "../utils/toastMessage";
+import { saveCredentials } from "../utils/storageHelper";
+
+let validationSchema = yup.object({
+  email: yup.string().email("Invalid email").required("Email is required"),
+  password: yup
+    .string()
+    .min(6, "Password must be at least 6 characters long")
+    .required("Password is required"),
+});
 
 export default function SignIn({ navigation }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSignIn = async (values: any) => {
+    if (!values.email || !values.password) {
+      return;
+    } else {
+      try {
+        setLoading(true);
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          values.email,
+          values.password
+        );
+        await saveCredentials(values.email, values.password);
+        navigation.navigate("BottomTabs");
+        showToast({
+          type: "success",
+          title: "Welcome Back!",
+          message: "Signed In successfully",
+        });
+        console.log("User signed in:", userCredential.user);
+      } catch (error) {
+        showToast({
+          type: "error",
+          title: "Sign In Failed",
+          message: `${error}`,
+        });
+        console.log("Sign-in error:", error.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -58,56 +103,112 @@ export default function SignIn({ navigation }) {
             </Text>
 
             {/* Inputs */}
-            <InputField
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Enter Your Email"
-              icon={(hasValue) => (
-                <MaterialIcons
-                  name="email"
-                  size={RFPercentage(2)}
-                  color={hasValue ? COLORS.black : COLORS.gray}
-                />
-              )}
-            />
 
-            <InputField
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Enter Your Password"
-              password
-              icon={(hasValue) => (
-                <Fontisto
-                  name="locked"
-                  size={RFPercentage(2)}
-                  color={hasValue ? COLORS.black : COLORS.gray}
-                />
-              )}
-            />
-
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => navigation.navigate("ForgetPassword")}
-              style={{ alignSelf: "flex-end", marginTop: RFPercentage(0.7) }}
+            <Formik
+              initialValues={{
+                email: "",
+                password: "",
+              }}
+              validationSchema={validationSchema}
+              onSubmit={(values) => handleSignIn(values)}
             >
-              <Text
-                style={{
-                  color: COLORS.gray2,
-                  fontFamily: "Medium",
-                  fontSize: RFPercentage(1.7),
-                }}
-              >
-                Forget Password?
-              </Text>
-            </TouchableOpacity>
-
-            {/* Primary Button */}
-            <View style={styles.primaryBtnWrapper}>
-              <PrimaryButton
-                title="Sign In"
-                onPress={() => navigation.navigate("BottomTabs")}
-              />
-            </View>
+              {({
+                handleChange,
+                handleBlur,
+                handleSubmit,
+                values,
+                errors,
+                touched,
+              }) => (
+                <>
+                  <InputField
+                    onChangeText={handleChange("email")}
+                    handleBlur={handleBlur("email")}
+                    value={values.email}
+                    placeholder="Enter Your Email"
+                    icon={(hasValue) => (
+                      <MaterialIcons
+                        name="email"
+                        size={RFPercentage(2.2)}
+                        color={hasValue ? COLORS.black : COLORS.gray}
+                      />
+                    )}
+                    error={touched.email && !!errors.email}
+                  />
+                  {touched.email && errors.email && (
+                    <>
+                      <View
+                        style={{ marginTop: RFPercentage(0.5), width: "100%" }}
+                      >
+                        <Text
+                          style={{
+                            color: "red",
+                            fontFamily: "Regular",
+                            fontSize: RFPercentage(1.7),
+                          }}
+                        >
+                          {errors.email}
+                        </Text>
+                      </View>
+                    </>
+                  )}
+                  <InputField
+                    onChangeText={handleChange("password")}
+                    handleBlur={handleBlur("password")}
+                    value={values.password}
+                    placeholder="Enter Your Password"
+                    password
+                    icon={(hasValue) => (
+                      <Fontisto
+                        name="locked"
+                        size={RFPercentage(2.2)}
+                        color={hasValue ? COLORS.black : COLORS.gray}
+                      />
+                    )}
+                    error={touched.password && !!errors.password}
+                  />
+                  {touched.password && errors.password && (
+                    <>
+                      <View
+                        style={{ marginTop: RFPercentage(0.5), width: "100%" }}
+                      >
+                        <Text
+                          style={{
+                            color: "red",
+                            fontFamily: "Regular",
+                            fontSize: RFPercentage(1.7),
+                          }}
+                        >
+                          {errors.password}
+                        </Text>
+                      </View>
+                    </>
+                  )}
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => navigation.navigate("ForgetPassword")}
+                    style={{
+                      alignSelf: "flex-end",
+                      marginTop: RFPercentage(0.7),
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: COLORS.gray2,
+                        fontFamily: "Medium",
+                        fontSize: RFPercentage(1.7),
+                      }}
+                    >
+                      Forget Password?
+                    </Text>
+                  </TouchableOpacity>
+                  {/* Primary Button */}
+                  <View style={styles.primaryBtnWrapper}>
+                    <PrimaryButton title="Sign In" onPress={handleSubmit} loader={loading} />
+                  </View>
+                </>
+              )}
+            </Formik>
 
             {/* Already have an account */}
             <TouchableOpacity

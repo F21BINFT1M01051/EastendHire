@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: {
     color: COLORS.gray2,
-    fontSize: RFPercentage(1.6),
+    fontSize: RFPercentage(1.7),
     fontFamily: "Medium",
   },
 });

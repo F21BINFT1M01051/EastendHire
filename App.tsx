@@ -1,6 +1,9 @@
 import { ActivityIndicator, View } from "react-native";
 import MainNavigator from "./app/navigation/StackNavigator";
 import { useFonts } from "expo-font";
+import Toast from "react-native-toast-message";
+import { RFPercentage } from "react-native-responsive-fontsize";
+import { toastConfig } from "./app/utils/toastConfig";
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -13,11 +16,16 @@ export default function App() {
 
   if (!fontsLoaded) {
     return (
-      <View>
+      <View style={{top:RFPercentage(20)}}>
         <ActivityIndicator size={"large"} color={"black"} />
       </View>
     );
   }
 
-  return <MainNavigator />;
+  return (
+    <View style={{ flex: 1 }}>
+      <MainNavigator />
+      <Toast config={toastConfig} />
+    </View>
+  );
 }

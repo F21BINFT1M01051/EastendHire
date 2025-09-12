@@ -10,6 +10,9 @@ interface Props {
   onChangeText: (text: string) => void;
   password?: boolean;
   icon: (hasValue: boolean) => ReactElement;
+  handleBlur?: (event: any) => void;
+  style?: object;
+  error?: boolean;
 }
 
 const InputField = ({
@@ -18,6 +21,9 @@ const InputField = ({
   onChangeText,
   password,
   icon,
+  handleBlur,
+  style,
+  error = false,
 }: Props) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -29,7 +35,7 @@ const InputField = ({
       style={[
         styles.container,
         {
-          borderColor: isFocused ? COLORS.black : "transparent",
+          borderColor: error ? "red" : isFocused ? COLORS.black : "transparent",
           borderWidth: 1,
         },
       ]}
@@ -46,7 +52,12 @@ const InputField = ({
         cursorColor={COLORS.black}
         secureTextEntry={password && !showPassword}
         onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
+        onBlur={(e) => {
+          setIsFocused(false);
+          if (handleBlur) {
+            handleBlur(e);
+          }
+        }}
       />
 
       {password && (
@@ -91,7 +102,7 @@ const styles = StyleSheet.create({
     borderRadius: RFPercentage(1.6),
     fontFamily: "Regular",
     fontSize: RFPercentage(1.7),
-   top:RFPercentage(0.2)
+    top: RFPercentage(0.2),
   },
   eyeBtn: {},
 });
