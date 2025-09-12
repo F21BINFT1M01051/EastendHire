@@ -28,13 +28,13 @@ export default function BottomTabs() {
     return routeName === "profile" ? (
       <FontAwesome
         name={icon}
-        size={RFPercentage(2.8)}
+        size={RFPercentage(3.3)}
         color={routeName === selectedTab ? COLORS.black : COLORS.gray}
       />
     ) : (
       <MaterialCommunityIcons
         name={icon}
-        size={RFPercentage(2.8)}
+        size={RFPercentage(3.3)}
         color={routeName === selectedTab ? COLORS.black : COLORS.gray}
       />
     );
@@ -60,7 +60,7 @@ export default function BottomTabs() {
       bgColor={COLORS.tab}
       initialRouteName="home"
       borderWidth={2}
-      borderColor={"rgba(220, 220, 220, 1)"}
+      borderColor={"rgba(230, 230, 230, 1)"}
       borderTopLeftRight
       screenOptions={{ headerShown: false }}
       renderCircle={({ selectedTab, navigate }) => (
@@ -72,7 +72,7 @@ export default function BottomTabs() {
           >
             <Ionicons
               name="home"
-              size={RFPercentage(2.8)}
+              size={RFPercentage(3.2)}
               color={selectedTab === "home" ? "black" : "gray"}
             />
           </TouchableOpacity>
