@@ -30,10 +30,10 @@ export default function Onboarding({ navigation }) {
       />
       <Image
         source={IMAGES.onBoarding}
-        resizeMode="cover"
+        resizeMode="contain"
         style={{
           width: RFPercentage(50),
-          height: RFPercentage(25),
+          height: RFPercentage(30),
           marginTop: RFPercentage(5),
         }}
       />
