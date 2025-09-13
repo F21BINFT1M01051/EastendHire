@@ -24,6 +24,7 @@ import {
   orderBy,
   onSnapshot,
   deleteDoc,
+  getDocs,
 } from "firebase/firestore";
 import { auth, db } from "../../firebase";
 import { useFocusEffect } from "@react-navigation/native";
@@ -31,7 +32,7 @@ import { listenToUserData } from "../utils/userData";
 
 export default function History({ navigation }) {
   const [inspections, setInspections] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [userData, setUserData] = useState(null);
 
@@ -41,24 +42,35 @@ export default function History({ navigation }) {
       unsub = await listenToUserData(setUserData);
     };
     setupListener();
-
     return () => {
       if (unsub) unsub();
     };
   }, []);
-  
 
   useEffect(() => {
+    if (!userData?.userId) return;
     let unsubscribe;
-
     const loadData = async () => {
-      if (!userData.userId) return;
-
-      // get user creation date
+      setLoading(true);
       const userSnap = await getDoc(doc(db, "Users", userData.userId));
       const userCreatedAt =
         userSnap.data()?.createdAt?.toDate?.() ?? new Date();
       const expiryDate = moment(userCreatedAt).add(2, "months").endOf("day");
+
+      const qOld = query(
+        collection(db, "Inspections"),
+        where("userId", "==", userData.userId)
+      );
+      const snapOld = await getDocs(qOld);
+      snapOld.forEach((d) => {
+        const created = d.data()?.createdAt?.toDate?.();
+        if (
+          created &&
+          moment(created).isBefore(moment().subtract(2, "months"))
+        ) {
+          deleteDoc(doc(db, "Inspections", d.id));
+        }
+      });
 
       const q = query(
         collection(db, "Inspections"),
@@ -67,43 +79,26 @@ export default function History({ navigation }) {
       );
 
       unsubscribe = onSnapshot(q, (snap) => {
-        const keep = [];
-        const now = moment(); // current date/time
-        const cutoff = now.subtract(2, "months"); // inspections older than this will be deleted
-
-        snap.docs.forEach((d) => {
+        const keep = snap.docs.map((d) => {
           const data = d.data();
           const created = data?.createdAt?.toDate?.() ?? null;
-
-          if (!created) {
-            // no timestamp yet → just show, don’t delete
-            keep.push({ id: d.id, ...data, date: "Pending date" });
-            return;
-          }
-
-          if (moment(created).isAfter(cutoff)) {
-            // still within 2 months → keep
-            keep.push({
-              id: d.id,
-              ...data,
-              date: moment(created).format("MMMM DD, YYYY"),
-            });
-          } else {
-            // older than 2 months → remove
-            deleteDoc(doc(db, "Inspections", d.id)).catch((err) =>
-              console.log("Error deleting old inspection:", err)
-            );
-          }
+          return {
+            id: d.id,
+            ...data,
+            date: created
+              ? moment(created).format("MMMM DD, YYYY")
+              : "Pending date",
+          };
         });
-
         setInspections(keep);
         setLoading(false);
       });
     };
 
     loadData();
+
     return () => unsubscribe && unsubscribe();
-  }, []);
+  }, [userData]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
