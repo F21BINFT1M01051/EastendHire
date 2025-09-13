@@ -1,5 +1,11 @@
-import React from "react";
-import { Animated, Platform, StyleSheet, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  Animated,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+  Keyboard,
+} from "react-native";
 import { CurvedBottomBarExpo } from "react-native-curved-bottom-bar";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import History from "../screens/History";
@@ -11,6 +17,21 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { COLORS } from "../theme/constants";
 
 export default function BottomTabs() {
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const show = Keyboard.addListener("keyboardDidShow", () =>
+      setKeyboardVisible(true)
+    );
+    const hide = Keyboard.addListener("keyboardDidHide", () =>
+      setKeyboardVisible(false)
+    );
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+
   const _renderIcon = (routeName, selectedTab) => {
     let icon = "";
 
@@ -53,9 +74,12 @@ export default function BottomTabs() {
   return (
     <CurvedBottomBarExpo.Navigator
       type="DOWN"
-      style={styles.bottomBar}
+      style={[
+        styles.bottomBar,
+        keyboardVisible && { display: "none" }, 
+      ]}
       shadowStyle={styles.shadow}
-      height={Platform.OS === 'ios'  ? RFPercentage(8) : RFPercentage(9)}
+      height={Platform.OS === "ios" ? RFPercentage(8) : RFPercentage(9)}
       circleWidth={50}
       bgColor={COLORS.tab}
       initialRouteName="home"
@@ -64,7 +88,12 @@ export default function BottomTabs() {
       borderTopLeftRight
       screenOptions={{ headerShown: false }}
       renderCircle={({ selectedTab, navigate }) => (
-        <Animated.View style={[styles.btnCircleUp,{bottom:Platform.OS === 'ios' ? 30 : 20}]}>
+        <Animated.View
+          style={[
+            styles.btnCircleUp,
+            { bottom: Platform.OS === "ios" ? 30 : 20 },
+          ]}
+        >
           <TouchableOpacity
             activeOpacity={0.8}
             style={styles.button}

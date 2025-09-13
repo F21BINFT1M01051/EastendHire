@@ -40,8 +40,7 @@ export default function Onboarding({ navigation }) {
       <Text style={styles.title}>Welcome to Eastend Hire</Text>
 
       <Text style={styles.subtitle}>
-        Keep your vehicle in top shape with quick safety checks. Pass or fail
-        items, leave feedback, and stay road-ready!
+        {`Keep your vehicle in top shape with quick safety checks. Pass or fail items, leave feedback, and stay road-ready!`}
       </Text>
 
       <View style={styles.btnContainer}>
@@ -82,6 +81,7 @@ const styles = StyleSheet.create({
     lineHeight: RFPercentage(2.4),
     marginTop: RFPercentage(1.5),
     fontFamily: "Regular",
+    marginHorizontal:RFPercentage(1)
   },
   btnContainer: {
     width: "100%",
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: {
     color: COLORS.gray2,
-    fontSize: RFPercentage(1.7),
+    fontSize: RFPercentage(1.8),
     fontFamily: "Medium",
   },
 });

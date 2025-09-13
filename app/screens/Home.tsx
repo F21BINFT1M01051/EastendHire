@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Modal,
+  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { RFPercentage } from "react-native-responsive-fontsize";
@@ -24,6 +25,11 @@ import {
   MaterialIcons,
 } from "@expo/vector-icons";
 import { COLORS } from "../theme/constants";
+import { useFocusEffect } from "@react-navigation/native";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../../firebase";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { listenToUser } from "../utils/authState";
 
 export default function HomeScreen() {
   const [registration, setRegistration] = useState("");
@@ -33,12 +39,19 @@ export default function HomeScreen() {
   const [handBrake, setHandBrake] = useState(null);
   const [comments, setComments] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [userData, setUserData] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const today = new Date().toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
   });
+
+  useEffect(() => {
+    const unsub = listenToUser(setUserData);
+    return unsub;
+  }, []);
 
   const handleClear = () => {
     setRegistration("");
@@ -49,9 +62,42 @@ export default function HomeScreen() {
     setComments("");
   };
 
-  const handleSave = () => {
-    setShowSuccess(true);
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const user = auth.currentUser;
+      if (!user) {
+        console.log("No authenticated user found");
+        return;
+      }
+      const inspectionData = {
+        userId: user.uid,
+        registration: registration.trim(),
+        brakes,
+        lights,
+        seatBelt,
+        handBrake,
+        comments: comments.trim(),
+        createdAt: serverTimestamp(),
+      };
+      console.log("inspectionData......",inspectionData)
+      await addDoc(collection(db, "Inspections"), inspectionData);
+      setShowSuccess(true);
+      handleClear();
+    } catch (error) {
+      console.log("Error saving inspection:", error);
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const hasFormData =
+    registration.trim() !== "" ||
+    brakes !== null ||
+    lights !== null ||
+    seatBelt !== null ||
+    handBrake !== null ||
+    comments.trim() !== "";
 
   const renderOption = (label, state, setState, iconName, iconType) => {
     let IconComponent;
@@ -135,119 +181,149 @@ export default function HomeScreen() {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <>
-        <LinearGradient
-          colors={[COLORS.white, COLORS.white]}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={{ flex: 1, backgroundColor: COLORS.white }}>
+        <StatusBar
+          barStyle="dark-content"
+          translucent
+          backgroundColor="transparent"
+        />
+        <KeyboardAvoidingView
           style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-          <StatusBar
-            barStyle="dark-content"
-            translucent
-            backgroundColor="transparent"
-          />
-          <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior={Platform.OS === "ios" ? "padding" : undefined}
+          <ScrollView
+            contentContainerStyle={[
+              styles.container,
+              { paddingBottom: RFPercentage(28) },
+            ]}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="always"
           >
-            <ScrollView
-              contentContainerStyle={styles.container}
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="always"
+            {/* Header Section */}
+            <View style={styles.header}>
+              <View style={styles.avatarContainer}>
+                <Image
+                  source={
+                    userData?.image ? { uri: userData.image } : IMAGES.img
+                  }
+                  resizeMode="cover"
+                  style={userData?.image ? styles.avatar : styles.default}
+                />
+              </View>
+              <Text style={styles.greeting}>Welcome Back!</Text>
+            </View>
+
+            <Text style={styles.date}>
+              Today's Date:{" "}
+              <Text style={{ fontFamily: "Medium" }}>{today}</Text>
+            </Text>
+
+            {/* Vehicle Registration */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Vehicle Registration</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter registration number"
+                value={registration}
+                onChangeText={setRegistration}
+                placeholderTextColor={COLORS.placholder}
+                selectionColor={COLORS.black}
+              />
+            </View>
+
+            {/* Checklist Items */}
+            <Text
+              style={[styles.inputLabel, { marginBottom: RFPercentage(0) }]}
             >
-              {/* Header Section */}
-              <View style={styles.header}>
-                <View style={styles.avatarContainer}>
-                  <Image
-                    source={IMAGES.img}
-                    resizeMode="cover"
-                    style={styles.avatar}
-                  />
-                </View>
-                <Text style={styles.greeting}>Welcome!</Text>
-              </View>
+              Inspection Report
+            </Text>
+            <Text
+              style={{
+                color: COLORS.gray2,
+                fontFamily: "Regular",
+                fontSize: RFPercentage(1.6),
+                marginBottom: RFPercentage(1),
+              }}
+            >
+              Select Pass/Fail For Each
+            </Text>
+            {renderOption(
+              "Brakes",
+              brakes,
+              setBrakes,
+              "car-brake-abs",
+              "MaterialCommunityIcons"
+            )}
+            {renderOption(
+              "Lights",
+              lights,
+              setLights,
+              "car-parking-lights",
+              "MaterialCommunityIcons"
+            )}
+            {renderOption(
+              "Seat Belt",
+              seatBelt,
+              setSeatBelt,
+              "seatbelt",
+              "MaterialCommunityIcons"
+            )}
+            {renderOption(
+              "Hand Brake",
+              handBrake,
+              setHandBrake,
+              "car-brake-retarder",
+              "MaterialCommunityIcons"
+            )}
+            {/* Comments */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Comments / Feedback</Text>
+              <TextInput
+                style={[styles.input, styles.commentsBox]}
+                placeholder="Add any additional notes here"
+                value={comments}
+                onChangeText={setComments}
+                multiline
+                placeholderTextColor={COLORS.placholder}
+                selectionColor={COLORS.black}
+              />
+            </View>
 
-              <Text style={styles.date}>Today's Date: <Text style={{fontFamily:"Medium"}}>{today}</Text></Text>
-
-              {/* Vehicle Registration */}
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Vehicle Registration</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter registration number"
-                  value={registration}
-                  onChangeText={setRegistration}
-                  placeholderTextColor={COLORS.placholder}
-                  selectionColor={COLORS.black}
-                />
-              </View>
-
-              {/* Checklist Items */}
-              <Text style={styles.inputLabel}>
-                Inspection Report – Choose One
-              </Text>
-              {renderOption(
-                "Brakes",
-                brakes,
-                setBrakes,
-                "car-brake-abs",
-                "MaterialCommunityIcons"
-              )}
-              {renderOption(
-                "Lights",
-                lights,
-                setLights,
-                "car-parking-lights",
-                "MaterialCommunityIcons"
-              )}
-              {renderOption(
-                "Seat Belt",
-                seatBelt,
-                setSeatBelt,
-                "seatbelt",
-                "MaterialCommunityIcons"
-              )}
-              {renderOption(
-                "Hand Brake",
-                handBrake,
-                setHandBrake,
-                "car-brake-retarder",
-                "MaterialCommunityIcons"
-              )}
-              {/* Comments */}
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Comments / Feedback</Text>
-                <TextInput
-                  style={[styles.input, styles.commentsBox]}
-                  placeholder="Add any additional notes here"
-                  value={comments}
-                  onChangeText={setComments}
-                  multiline
-                  placeholderTextColor={COLORS.placholder}
-                  selectionColor={COLORS.black}
-                />
-              </View>
-
-              {/* Buttons */}
-              <View style={styles.btnRow}>
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  style={[styles.btn, styles.saveBtn]}
-                  onPress={handleSave}
-                >
+            {/* Buttons */}
+            <View style={styles.btnRow}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={[
+                  styles.btn,
+                  styles.saveBtn,
+                  (!hasFormData || saving) && { opacity: 0.8 },
+                ]}
+                onPress={handleSave}
+                disabled={!hasFormData || saving}
+              >
+                {saving ? (
+                  <ActivityIndicator size="small" color={COLORS.white} />
+                ) : (
                   <Text style={styles.btnText}>Save</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  style={[styles.btn, styles.clearBtn]}
-                  onPress={handleClear}
-                >
-                  <Text style={styles.btnText}>Clear All</Text>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </LinearGradient>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={[
+                  styles.btn,
+                  styles.clearBtn,
+                  !hasFormData && { opacity: 0.8 },
+                ]}
+                onPress={handleClear}
+                disabled={!hasFormData}
+              >
+                <Text style={styles.btnText}>Clear All</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
 
         <Modal
           visible={showSuccess}
@@ -278,7 +354,7 @@ export default function HomeScreen() {
             </View>
           </View>
         </Modal>
-      </>
+      </View>
     </TouchableWithoutFeedback>
   );
 }
@@ -287,7 +363,6 @@ const styles = StyleSheet.create({
   container: {
     paddingTop: RFPercentage(7),
     paddingHorizontal: RFPercentage(3),
-    paddingBottom: RFPercentage(28),
   },
   header: {
     flexDirection: "row",
@@ -307,6 +382,11 @@ const styles = StyleSheet.create({
   avatar: {
     width: RFPercentage(6.8),
     height: RFPercentage(6.8),
+    borderRadius: RFPercentage(100),
+  },
+  default: {
+    width: RFPercentage(8.8),
+    height: RFPercentage(8.8),
     borderRadius: RFPercentage(100),
   },
   greeting: {
@@ -460,6 +540,7 @@ const styles = StyleSheet.create({
     color: COLORS.gray3,
     textAlign: "center",
     marginBottom: RFPercentage(3),
+    fontFamily: "Regular",
   },
   modalButton: {
     backgroundColor: COLORS.black,

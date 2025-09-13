@@ -61,7 +61,7 @@ export default function SignIn({ navigation }) {
         showToast({
           type: "error",
           title: "Sign In Failed",
-          message: `${error}`,
+          message: `Invalid Credentials`,
         });
         console.log("Sign-in error:", error.message);
       } finally {
@@ -204,7 +204,11 @@ export default function SignIn({ navigation }) {
                   </TouchableOpacity>
                   {/* Primary Button */}
                   <View style={styles.primaryBtnWrapper}>
-                    <PrimaryButton title="Sign In" onPress={handleSubmit} loader={loading} />
+                    <PrimaryButton
+                      title="Sign In"
+                      onPress={handleSubmit}
+                      loader={loading}
+                    />
                   </View>
                 </>
               )}

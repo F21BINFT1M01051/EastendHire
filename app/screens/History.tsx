@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,112 +6,417 @@ import {
   FlatList,
   TouchableOpacity,
   StatusBar,
+  ScrollView,
+  ActivityIndicator,
+  Image,
+  RefreshControl,
 } from "react-native";
 import { RFPercentage } from "react-native-responsive-fontsize";
 import Feather from "@expo/vector-icons/Feather";
-import { LinearGradient } from "expo-linear-gradient";
-import { COLORS } from "../theme/constants";
+import moment from "moment";
+import { COLORS, IMAGES } from "../theme/constants";
+import {
+  getDoc,
+  doc,
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+  deleteDoc,
+} from "firebase/firestore";
+import { auth, db } from "../../firebase";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function History({ navigation }) {
-  const dummyHistory = [
-    {
-      id: "1",
-      date: "September 11, 2025",
-      registration: "ABC-1234",
-      brakes: "pass",
-      lights: "fail",
-      seatBelt: "pass",
-      handBrake: "pass",
-      comments: "Lights need replacement soon.",
-    },
-    {
-      id: "2",
-      date: "September 10, 2025",
-      registration: "XYZ-7890",
-      brakes: "fail",
-      lights: "pass",
-      seatBelt: "fail",
-      handBrake: "pass",
-      comments: "Brakes making noise, seat belt jammed.",
-    },
-  ];
+  const [inspections, setInspections] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    let unsubscribe;
+
+    const loadData = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      // get user creation date
+      const userSnap = await getDoc(doc(db, "Users", user.uid));
+      const userCreatedAt =
+        userSnap.data()?.createdAt?.toDate?.() ?? new Date();
+      const expiryDate = moment(userCreatedAt).add(2, "months").endOf("day");
+
+      const q = query(
+        collection(db, "Inspections"),
+        where("userId", "==", user.uid),
+        orderBy("createdAt", "desc")
+      );
+
+      unsubscribe = onSnapshot(q, (snap) => {
+        const keep = [];
+        const now = moment(); // current date/time
+        const cutoff = now.subtract(2, "months"); // inspections older than this will be deleted
+
+        snap.docs.forEach((d) => {
+          const data = d.data();
+          const created = data?.createdAt?.toDate?.() ?? null;
+
+          if (!created) {
+            // no timestamp yet → just show, don’t delete
+            keep.push({ id: d.id, ...data, date: "Pending date" });
+            return;
+          }
+
+          if (moment(created).isAfter(cutoff)) {
+            // still within 2 months → keep
+            keep.push({
+              id: d.id,
+              ...data,
+              date: moment(created).format("MMMM DD, YYYY"),
+            });
+          } else {
+            // older than 2 months → remove
+            deleteDoc(doc(db, "Inspections", d.id)).catch((err) =>
+              console.log("Error deleting old inspection:", err)
+            );
+          }
+        });
+
+        setInspections(keep);
+        setLoading(false);
+      });
+    };
+
+    loadData();
+    return () => unsubscribe && unsubscribe();
+  }, []);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 600); // short delay for UI feedback
+  }, []);
+
+  // Add pass/fail counts
+  const enhancedHistory = useMemo(() => {
+    return inspections.map((item) => {
+      const checks = ["brakes", "lights", "seatBelt", "handBrake"];
+      const passed = checks.filter((c) => item[c] === "pass").length;
+      const failed = checks.length - passed;
+
+      return {
+        ...item,
+        passed,
+        failed,
+        status: failed >= 2 ? "fail" : "pass",
+      };
+    });
+  }, [inspections]);
+
+  // Group by month
+  const groupedData = useMemo(() => {
+    const groups = {};
+    enhancedHistory.forEach((item) => {
+      const month = moment(item.date, "MMMM DD, YYYY").format("MMMM YYYY");
+      if (!groups[month]) groups[month] = [];
+      groups[month].push(item);
+    });
+
+    return Object.entries(groups).map(([month, data]) => ({ month, data }));
+  }, [enhancedHistory]);
+
+  const StatusPill = ({ status }) => {
+    const isPass = status === "pass";
+    return (
+      <View
+        style={[
+          styles.statusPill,
+          { backgroundColor: isPass ? COLORS.successLight : COLORS.errorLight },
+        ]}
+      >
+        <View
+          style={[
+            styles.statusDot,
+            { backgroundColor: isPass ? COLORS.success : COLORS.error },
+          ]}
+        />
+        <Text
+          style={[
+            styles.statusText,
+            { color: isPass ? COLORS.success : COLORS.error },
+          ]}
+        >
+          {isPass ? "PASSED" : "FAILED"}
+        </Text>
+      </View>
+    );
+  };
 
   const renderCard = ({ item }) => (
     <TouchableOpacity
-      activeOpacity={0.8}
+      activeOpacity={0.9}
       style={styles.card}
       onPress={() => navigation.navigate("DetailsScreen", { data: item })}
     >
-      <View>
+      <View style={styles.cardHeader}>
         <Text style={styles.date}>{item.date}</Text>
-        <Text style={styles.registration}>Vehicle Registration: {item.registration}</Text>
+        <StatusPill status={item.status} />
       </View>
 
-      <TouchableOpacity activeOpacity={0.8}>
+      <Text style={styles.registration}>{item.registration}</Text>
+
+      <View style={styles.statsContainer}>
+        <View style={styles.statItem}>
+          <Text style={[styles.statNumber, { color: COLORS.success }]}>
+            {item.passed}
+          </Text>
+          <Text style={styles.statLabel}>Passed</Text>
+        </View>
+
+        <View style={styles.statDivider} />
+
+        <View style={styles.statItem}>
+          <Text style={[styles.statNumber, { color: COLORS.error }]}>
+            {item.failed}
+          </Text>
+          <Text style={styles.statLabel}>Failed</Text>
+        </View>
+
+        <View style={styles.statDivider} />
+
+        <View style={styles.statItem}>
+          <Text style={[styles.statNumber, { color: COLORS.dark }]}>
+            {item.passed + item.failed}
+          </Text>
+          <Text style={styles.statLabel}>Total</Text>
+        </View>
+      </View>
+
+      <View style={styles.cardFooter}>
+        <Text style={styles.viewDetails}>View details</Text>
         <Feather
           name="chevron-right"
-          size={RFPercentage(2.2)}
+          size={RFPercentage(2)}
           color={COLORS.black}
         />
-      </TouchableOpacity>
+      </View>
     </TouchableOpacity>
   );
 
-  return (
-    <LinearGradient
-      colors={[COLORS.white, COLORS.white]}
-      style={styles.container}
-    >
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" />
-      <Text style={styles.title}>History</Text>
+  const renderMonthSection = ({ item }) => (
+    <View style={styles.monthSection}>
+      <View style={styles.monthHeader}>
+        <Text style={styles.monthLabel}>{item.month}</Text>
+        <Text style={styles.monthCount}>
+          {item.data.length}{" "}
+          {item.data.length > 1 ? "Inspections" : "Inspection"}
+        </Text>
+      </View>
       <FlatList
-        data={dummyHistory}
-        keyExtractor={(item) => item.id}
+        data={item.data}
+        keyExtractor={(d) => d.id}
         renderItem={renderCard}
-        contentContainerStyle={{ paddingBottom: 20 }}
+        scrollEnabled={false}
+        ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
       />
-    </LinearGradient>
+    </View>
+  );
+
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: RFPercentage(8) }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[COLORS.black]}
+          />
+        }
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Inspection History</Text>
+          <Text style={styles.subtitle}>Last 2 months</Text>
+        </View>
+        {loading ? (
+          <ActivityIndicator
+            color={COLORS.black}
+            size={"large"}
+            style={{ marginTop: RFPercentage(25) }}
+          />
+        ) : (
+          <FlatList
+            data={groupedData}
+            renderItem={renderMonthSection}
+            scrollEnabled={false}
+            keyExtractor={(item) => item.month}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={
+              <View
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginTop: RFPercentage(25),
+                }}
+              >
+                <Image
+                  source={IMAGES.noData}
+                  resizeMode="contain"
+                  style={{ width: RFPercentage(12), height: RFPercentage(12) }}
+                />
+                <Text
+                  style={{
+                    fontSize: RFPercentage(2),
+                    color: COLORS.gray,
+                    marginTop: RFPercentage(1),
+                    fontFamily: "Regular",
+                  }}
+                >
+                  No inspections found.
+                </Text>
+              </View>
+            }
+          />
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: COLORS.white,
+  },
+  header: {
     padding: RFPercentage(3),
-    paddingTop: RFPercentage(8),
+    marginTop: RFPercentage(4),
   },
   title: {
-    fontSize: RFPercentage(2.3),
-    marginBottom: RFPercentage(2),
-    color: COLORS.black,
+    fontSize: RFPercentage(2.5),
     fontFamily: "Bold",
+    color: COLORS.dark,
+    marginBottom: RFPercentage(0.5),
+  },
+  subtitle: {
+    fontSize: RFPercentage(1.9),
+    fontFamily: "Medium",
+    color: COLORS.gray,
+  },
+  listContent: {
+    paddingHorizontal: RFPercentage(2),
+    paddingBottom: RFPercentage(4),
+  },
+  monthSection: {
+    marginBottom: RFPercentage(3),
+  },
+  monthHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: RFPercentage(2),
+    paddingHorizontal: RFPercentage(1),
+  },
+  monthLabel: {
+    fontSize: RFPercentage(1.8),
+    fontFamily: "SemiBold",
+    color: COLORS.dark,
+    backgroundColor: "rgba(238, 238, 238, 1)",
+    paddingHorizontal: RFPercentage(1.8),
+    paddingVertical: RFPercentage(1),
+    borderRadius: RFPercentage(100),
+  },
+  monthCount: {
+    fontSize: RFPercentage(1.6),
+    fontFamily: "Medium",
+    color: COLORS.gray,
   },
   card: {
     backgroundColor: COLORS.white,
-    padding: RFPercentage(2),
-    borderRadius: 12,
-    marginBottom: RFPercentage(1.5),
+    padding: RFPercentage(2.5),
+    borderRadius: RFPercentage(1.5),
     shadowColor: "#000",
-    shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 3,
-    elevation: 2,
-    borderWidth: 1,
-    borderBottomWidth: RFPercentage(0.5),
-    borderColor: "rgba(235, 235, 235, 1)",
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  cardSeparator: { height: RFPercentage(1.5) },
+  cardHeader: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: RFPercentage(1),
   },
   date: {
-    fontSize: RFPercentage(1.9),
+    fontSize: RFPercentage(1.8),
     fontFamily: "SemiBold",
-    color: COLORS.black,
+    color: COLORS.dark,
+    flex: 1,
+    paddingRight: RFPercentage(1),
+  },
+  statusPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: RFPercentage(1.2),
+    paddingVertical: RFPercentage(0.6),
+    borderRadius: RFPercentage(1),
+  },
+  statusDot: {
+    width: RFPercentage(1),
+    height: RFPercentage(1),
+    borderRadius: RFPercentage(0.5),
+    marginRight: RFPercentage(0.5),
+  },
+  statusText: {
+    fontSize: RFPercentage(1.4),
+    fontFamily: "SemiBold",
   },
   registration: {
     fontSize: RFPercentage(1.8),
-    color: COLORS.gray2,
-    marginTop: RFPercentage(0.7),
-    fontFamily: "Regular",
+    color: COLORS.gray,
+    marginBottom: RFPercentage(1.5),
+    fontFamily: "Medium",
+  },
+  statsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    marginVertical: RFPercentage(1.5),
+    paddingVertical: RFPercentage(1.5),
+    backgroundColor: COLORS.lightBlue,
+    borderRadius: RFPercentage(1),
+  },
+  statItem: { alignItems: "center", flex: 1 },
+  statNumber: {
+    fontSize: RFPercentage(2.5),
+    fontFamily: "Bold",
+    marginBottom: RFPercentage(0.5),
+  },
+  statLabel: {
+    fontSize: RFPercentage(1.4),
+    fontFamily: "Medium",
+    color: COLORS.gray,
+  },
+  statDivider: {
+    width: 1,
+    height: RFPercentage(3),
+    backgroundColor: COLORS.lightGray,
+  },
+  cardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: RFPercentage(2),
+    paddingTop: RFPercentage(1.5),
+    borderTopWidth: 1,
+    borderTopColor: COLORS.lightGray,
+  },
+  viewDetails: {
+    fontSize: RFPercentage(1.6),
+    fontFamily: "SemiBold",
+    color: COLORS.black,
   },
 });

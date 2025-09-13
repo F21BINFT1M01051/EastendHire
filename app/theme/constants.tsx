@@ -1,10 +1,11 @@
 export const IMAGES = {
   onBoarding: require("../../assets/pana.png"),
   logo: require("../../assets/logo22.png"),
-  img: require("../../assets/img.jpg"),
+  img: require("../../assets/img.png"),
   anim: require("../../assets/anim.png"),
   anim2: require("../../assets/anim2.png"),
   edit: require("../../assets/edit.png"),
+  noData: require("../../assets/no.png"),
 };
 
 export const COLORS = {
@@ -26,4 +27,18 @@ export const COLORS = {
   black3: "#0a0a0aff",
   black4: "#393b3cff",
   red: "#dc3545",
+
+  background: "#f5f7fa",
+  primary: "#4361ee",
+  success: "#2ecc71",
+  successLight: "#eafaf1",
+  error: "#e74c3c",
+  errorLight: "#fdedec",
+  lightBlue: "#e7f9fdff",
+  lightGray: "#eaeaea",
+  dark: "#2d3436",
+
+  primaryDark: "#3a56d4",
+
+  grayLight: "#adb5bd",
 };

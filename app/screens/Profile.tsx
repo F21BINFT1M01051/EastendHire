@@ -23,12 +23,21 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential,
 } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "../../firebase"; // <-- make sure db is Firestore instance
+import {
+  doc,
+  getDoc,
+  deleteDoc,
+  getDocs,
+  query,
+  collection,
+  where,
+} from "firebase/firestore";
+import { auth, db } from "../../firebase";
 import { IMAGES, COLORS } from "../theme/constants";
 import { showToast } from "../utils/toastMessage";
 import { useFocusEffect } from "@react-navigation/native";
 import { getCredentials, clearCredentials } from "../utils/storageHelper";
+import { listenToUser } from "../utils/authState";
 
 const Profile = () => {
   const navigation = useNavigation();
@@ -36,35 +45,17 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
   const [actionType, setActionType] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      const fetchUser = async () => {
-        try {
-          const user = auth.currentUser;
-          if (!user) return;
-          const docRef = doc(db, "Users", user.uid);
-          const docSnap = await getDoc(docRef);
-
-          if (docSnap.exists()) {
-            setUserData(docSnap.data());
-          } else {
-            console.log("No user data found!");
-          }
-        } catch (error) {
-          console.log("Error fetching user:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchUser();
-    }, [])
-  );
+  useEffect(() => {
+    const unsub = listenToUser(setUserData);
+    return unsub;
+  }, []);
 
   const handleAction = async () => {
-    if (actionType === "logout") {
-      try {
+    setActionLoading(true); // start loader
+    try {
+      if (actionType === "logout") {
         await AsyncStorage.removeItem("userCredentials");
         await signOut(auth);
         navigation.navigate("SignIn");
@@ -73,24 +64,35 @@ const Profile = () => {
           title: "Signed Out",
           message: "You have been signed out successfully.",
         });
-      } catch (e) {
-        console.log("Logout error", e);
       }
-    }
 
-    if (actionType === "delete") {
-      try {
+      if (actionType === "delete") {
         const user = auth.currentUser;
         if (!user) return;
+
         const creds = await getCredentials();
-        if (!creds?.email || !creds?.password) {
-          return;
-        }
+        if (!creds?.email || !creds?.password) return;
+
         const credential = EmailAuthProvider.credential(
           creds.email,
           creds.password
         );
         await reauthenticateWithCredential(user, credential);
+
+        try {
+          const userDocRef = doc(db, "Users", user.uid);
+          await deleteDoc(userDocRef);
+
+          const q = query(
+            collection(db, "Users"),
+            where("email", "==", user.email)
+          );
+          const snap = await getDocs(q);
+          snap.forEach((d) => deleteDoc(d.ref));
+        } catch (err) {
+          console.log("Error deleting Firestore doc:", err);
+        }
+
         await deleteUser(user);
         await clearCredentials();
         navigation.navigate("Onboarding");
@@ -99,20 +101,15 @@ const Profile = () => {
           title: "Account Deleted",
           message: "Your account has been deleted successfully.",
         });
-      } catch (e) {
-        console.log("Delete error", e);
       }
-    }
-    setShowConfirm(false);
-  };
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color={COLORS.black} />
-      </View>
-    );
-  }
+      setShowConfirm(false);
+    } catch (e) {
+      console.log("Action error", e);
+    } finally {
+      setActionLoading(false); // stop loader
+    }
+  };
 
   return (
     <LinearGradient
@@ -132,11 +129,11 @@ const Profile = () => {
           <Image
             source={userData?.image ? { uri: userData.image } : IMAGES.img}
             resizeMode="cover"
-            style={styles.profileImage}
+            style={userData?.image ? styles.profileImage : styles.default}
           />
         </View>
 
-        <Text style={styles.name}>{userData?.name || "No Name"}</Text>
+        <Text style={styles.name}>{userData?.name}</Text>
 
         <TouchableOpacity
           onPress={() => navigation.navigate("EditProfile")}
@@ -211,7 +208,10 @@ const Profile = () => {
             <View style={styles.modalBtnRow}>
               <TouchableOpacity
                 activeOpacity={0.8}
-                style={[styles.modalButton, { backgroundColor: COLORS.gray }]}
+                style={[
+                  styles.modalButton,
+                  { backgroundColor: "rgba(194, 194, 194, 1)" },
+                ]}
                 onPress={() => setShowConfirm(false)}
               >
                 <Text style={styles.modalButtonText}>Cancel</Text>
@@ -220,10 +220,15 @@ const Profile = () => {
                 activeOpacity={0.8}
                 style={[styles.modalButton, { backgroundColor: COLORS.black }]}
                 onPress={handleAction}
+                disabled={actionLoading}
               >
-                <Text style={styles.modalButtonText}>
-                  {actionType === "logout" ? "Log Out" : "Delete"}
-                </Text>
+                {actionLoading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.modalButtonText}>
+                    {actionType === "logout" ? "Log Out" : "Delete"}
+                  </Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -246,7 +251,7 @@ const styles = StyleSheet.create({
   title: {
     textAlign: "center",
     fontFamily: "Bold",
-    fontSize: RFPercentage(2.2),
+    fontSize: RFPercentage(2.5),
     marginTop: RFPercentage(2),
   },
   imageContainer: {
@@ -262,6 +267,11 @@ const styles = StyleSheet.create({
   profileImage: {
     width: RFPercentage(15.6),
     height: RFPercentage(15.6),
+    borderRadius: RFPercentage(100),
+  },
+  default: {
+    width: RFPercentage(21),
+    height: RFPercentage(21),
     borderRadius: RFPercentage(100),
   },
   name: {
@@ -313,6 +323,7 @@ const styles = StyleSheet.create({
     color: COLORS.gray3,
     textAlign: "center",
     marginBottom: RFPercentage(3),
+    fontFamily: "Regular",
   },
   modalBtnRow: {
     flexDirection: "row",

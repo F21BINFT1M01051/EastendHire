@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { RFPercentage } from "react-native-responsive-fontsize";
@@ -20,33 +22,39 @@ import { auth, db } from "../../firebase"; // adjust to your path
 import { COLORS, IMAGES } from "../theme/constants";
 import InputField from "../components/InputField";
 import PrimaryButton from "../components/PrimaryButton";
+import { showToast } from "../utils/toastMessage";
 
 const CLOUD_NAME = "do0rk5mrh";
 const UPLOAD_PRESET = "EastendHire";
 
 export default function EditProfile({ navigation }) {
   const [uploading, setUploading] = useState(false);
-  const [profileImage, setProfileImage] = useState(IMAGES.img); // fallback
+  const [profileImage, setProfileImage] = useState(null); // fallback
   const [existingImage, setExistingImage] = useState(null); // current image from Firestore
   const [name, setName] = useState("");
   const [pickedNewImage, setPickedNewImage] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // ---------- Load user data ----------
   useEffect(() => {
     const loadUser = async () => {
+      setLoading(true);
       const user = auth.currentUser;
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       const ref = doc(db, "Users", user.uid);
       const snap = await getDoc(ref);
       if (snap.exists()) {
         const data = snap.data();
-        console.log("data.......", data);
         if (data.name) setName(data.name);
         if (data.image) {
           setProfileImage({ uri: data.image });
           setExistingImage(data.image);
         }
       }
+      setLoading(false);
     };
     loadUser();
   }, []);
@@ -91,8 +99,6 @@ export default function EditProfile({ navigation }) {
       );
       return res.data.secure_url;
     } catch (err) {
-      console.log("Cloudinary upload error:", err);
-      Alert.alert("Upload failed", "Something went wrong while uploading.");
       return null;
     }
   };
@@ -127,91 +133,109 @@ export default function EditProfile({ navigation }) {
       setExistingImage(imageUrl);
       setPickedNewImage(false);
       setUploading(false);
-      Alert.alert("Success", "Profile updated successfully!");
+      showToast({
+        type: "success",
+        title: "Profile Update",
+        message: "Profile updated successfully!",
+      });
       navigation.goBack();
     } catch (error) {
       setUploading(false);
-      console.log("Update error:", error);
-      Alert.alert("Error", "Failed to update profile.");
+      showToast({
+        type: "error",
+        title: "Profile Update",
+        message: "Failed to update profile.",
+      });
     }
   };
 
   return (
-    <LinearGradient
-      colors={[COLORS.white, COLORS.white]}
-      style={styles.gradient}
-    >
-      <StatusBar
-        barStyle="dark-content"
-        translucent
-        backgroundColor="transparent"
-      />
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <LinearGradient
+        colors={[COLORS.white, COLORS.white]}
+        style={styles.gradient}
+      >
+        <StatusBar
+          barStyle="dark-content"
+          translucent
+          backgroundColor="transparent"
+        />
 
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          >
-            <Feather
-              name="chevron-left"
-              size={RFPercentage(3)}
-              color={COLORS.black}
-            />
-          </TouchableOpacity>
-          <Text style={styles.headerText}>Edit Profile</Text>
-        </View>
+        <View style={styles.container}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => navigation.goBack()}
+              style={styles.backButton}
+            >
+              <Feather
+                name="chevron-left"
+                size={RFPercentage(3)}
+                color={COLORS.black}
+              />
+            </TouchableOpacity>
+            <Text style={styles.headerText}>Edit Profile</Text>
+          </View>
 
-        {/* Profile Image */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={pickImage}
-          style={styles.imageContainer}
-        >
-          <Image source={profileImage} style={styles.profileImage} />
-
+          {/* Profile Image */}
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={pickImage}
-            style={styles.editIconContainer}
+            style={styles.imageContainer}
           >
-            <Image
-              source={IMAGES.edit}
-              resizeMode="contain"
-              style={styles.editIcon}
-            />
-          </TouchableOpacity>
-        </TouchableOpacity>
+            {loading ? (
+              <ActivityIndicator size={"small"} color={COLORS.black} />
+            ) : (
+              <>
+                <Image
+                  source={profileImage ? profileImage : IMAGES.img}
+                  style={profileImage ? styles.profileImage : styles.default}
+                />
 
-        {/* Input Field */}
-        <View style={styles.inputWrapper}>
-          <Text style={styles.label}>Edit Your Name</Text>
-          <InputField
-            value={name}
-            onChangeText={setName}
-            placeholder=""
-            icon={(hasValue) => (
-              <FontAwesome5
-                name="user-alt"
-                size={RFPercentage(2)}
-                color={hasValue ? COLORS.black : COLORS.gray}
-              />
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={pickImage}
+                  style={styles.editIconContainer}
+                >
+                  <Image
+                    source={IMAGES.edit}
+                    resizeMode="contain"
+                    style={styles.editIcon}
+                  />
+                </TouchableOpacity>
+              </>
             )}
-          />
-        </View>
+          </TouchableOpacity>
 
-        {/* Button */}
-        <View style={styles.buttonWrapper}>
-          <PrimaryButton
-            title={uploading ? "Saving..." : "Save"}
-            onPress={handleSaveProfile}
-            loader={uploading}
-          />
+          {/* Input Field */}
+          <View style={styles.inputWrapper}>
+            <Text style={styles.label}>Edit Your Name</Text>
+            <InputField
+              value={name}
+              onChangeText={setName}
+              placeholder=""
+              icon={(hasValue) => (
+                <FontAwesome5
+                  name="user-alt"
+                  size={RFPercentage(2)}
+                  color={hasValue ? COLORS.black : COLORS.gray}
+                />
+              )}
+            />
+          </View>
+
+          {/* Button */}
+          <View style={styles.buttonWrapper}>
+            <PrimaryButton
+              title={uploading ? "Saving..." : "Save"}
+              onPress={handleSaveProfile}
+              loader={uploading}
+            />
+          </View>
         </View>
-      </View>
-    </LinearGradient>
+      </LinearGradient>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -248,6 +272,11 @@ const styles = StyleSheet.create({
   profileImage: {
     width: RFPercentage(15.6),
     height: RFPercentage(15.6),
+    borderRadius: RFPercentage(100),
+  },
+  default: {
+    width: RFPercentage(21),
+    height: RFPercentage(21),
     borderRadius: RFPercentage(100),
   },
   loader: {
