@@ -80,7 +80,6 @@ export default function HomeScreen() {
         comments: comments.trim(),
         createdAt: serverTimestamp(),
       };
-      console.log("inspectionData......",inspectionData)
       await addDoc(collection(db, "Inspections"), inspectionData);
       setShowSuccess(true);
       handleClear();
@@ -195,7 +194,12 @@ export default function HomeScreen() {
           <ScrollView
             contentContainerStyle={[
               styles.container,
-              { paddingBottom: RFPercentage(28) },
+              {
+                paddingBottom:
+                  Platform.OS === "android"
+                    ? RFPercentage(28)
+                    : RFPercentage(15),
+              },
             ]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="always"
