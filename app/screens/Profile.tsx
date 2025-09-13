@@ -38,6 +38,7 @@ import { showToast } from "../utils/toastMessage";
 import { useFocusEffect } from "@react-navigation/native";
 import { getCredentials, clearCredentials } from "../utils/storageHelper";
 import { listenToUser } from "../utils/authState";
+import { listenToUserData } from "../utils/userData";
 
 const Profile = () => {
   const navigation = useNavigation();
@@ -48,8 +49,15 @@ const Profile = () => {
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
-    const unsub = listenToUser(setUserData);
-    return unsub;
+    let unsub;
+    const setupListener = async () => {
+      unsub = await listenToUserData(setUserData); // setUserData state will update in real-time
+    };
+    setupListener();
+
+    return () => {
+      if (unsub) unsub();
+    };
   }, []);
 
   const handleAction = async () => {

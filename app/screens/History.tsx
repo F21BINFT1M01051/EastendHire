@@ -27,28 +27,42 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "../../firebase";
 import { useFocusEffect } from "@react-navigation/native";
+import { listenToUserData } from "../utils/userData";
 
 export default function History({ navigation }) {
   const [inspections, setInspections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [userData, setUserData] = useState(null);
+
+  useEffect(() => {
+    let unsub;
+    const setupListener = async () => {
+      unsub = await listenToUserData(setUserData);
+    };
+    setupListener();
+
+    return () => {
+      if (unsub) unsub();
+    };
+  }, []);
+  
 
   useEffect(() => {
     let unsubscribe;
 
     const loadData = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
+      if (!userData.userId) return;
 
       // get user creation date
-      const userSnap = await getDoc(doc(db, "Users", user.uid));
+      const userSnap = await getDoc(doc(db, "Users", userData.userId));
       const userCreatedAt =
         userSnap.data()?.createdAt?.toDate?.() ?? new Date();
       const expiryDate = moment(userCreatedAt).add(2, "months").endOf("day");
 
       const q = query(
         collection(db, "Inspections"),
-        where("userId", "==", user.uid),
+        where("userId", "==", userData.userId),
         orderBy("createdAt", "desc")
       );
 

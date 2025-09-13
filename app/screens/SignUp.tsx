@@ -50,11 +50,14 @@ export default function SignUp({ navigation }) {
         values.password
       );
       const user = userCredential.user;
+
       await setDoc(doc(db, "Users", user.uid), {
+        userId: user.uid, // <-- add this line
         name: values.name,
         email: values.email,
         createdAt: serverTimestamp(),
       });
+
       await saveCredentials(values.email, values.password);
       navigation.navigate("BottomTabs");
       showToast({

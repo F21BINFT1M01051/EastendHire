@@ -30,6 +30,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../../firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { listenToUser } from "../utils/authState";
+import { listenToUserData } from "../utils/userData";
 
 export default function HomeScreen() {
   const [registration, setRegistration] = useState("");
@@ -49,10 +50,18 @@ export default function HomeScreen() {
   });
 
   useEffect(() => {
-    const unsub = listenToUser(setUserData);
-    return unsub;
+    let unsub;
+    const setupListener = async () => {
+      unsub = await listenToUserData(setUserData); // setUserData state will update in real-time
+    };
+    setupListener();
+
+    return () => {
+      if (unsub) unsub();
+    };
   }, []);
 
+  console.log("");
   const handleClear = () => {
     setRegistration("");
     setBrakes(null);
@@ -65,13 +74,13 @@ export default function HomeScreen() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const user = auth.currentUser;
-      if (!user) {
-        console.log("No authenticated user found");
+
+      if (!userData?.userId) {
+        console.log("No user ID found in userData");
         return;
       }
       const inspectionData = {
-        userId: user.uid,
+        userId: userData.userId, // <-- use userId from Users collection
         registration: registration.trim(),
         brakes,
         lights,
@@ -80,6 +89,7 @@ export default function HomeScreen() {
         comments: comments.trim(),
         createdAt: serverTimestamp(),
       };
+
       await addDoc(collection(db, "Inspections"), inspectionData);
       setShowSuccess(true);
       handleClear();

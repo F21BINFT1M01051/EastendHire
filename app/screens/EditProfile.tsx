@@ -23,6 +23,7 @@ import { COLORS, IMAGES } from "../theme/constants";
 import InputField from "../components/InputField";
 import PrimaryButton from "../components/PrimaryButton";
 import { showToast } from "../utils/toastMessage";
+import { listenToUserData } from "../utils/userData";
 
 const CLOUD_NAME = "do0rk5mrh";
 const UPLOAD_PRESET = "EastendHire";
@@ -34,32 +35,33 @@ export default function EditProfile({ navigation }) {
   const [name, setName] = useState("");
   const [pickedNewImage, setPickedNewImage] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [userData, setUserData] = useState(null);
 
-  // ---------- Load user data ----------
   useEffect(() => {
-    const loadUser = async () => {
-      setLoading(true);
-      const user = auth.currentUser;
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      const ref = doc(db, "Users", user.uid);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        const data = snap.data();
-        if (data.name) setName(data.name);
-        if (data.image) {
-          setProfileImage({ uri: data.image });
-          setExistingImage(data.image);
+    let unsubscribe;
+
+    const setupListener = async () => {
+      unsubscribe = await listenToUserData((data) => {
+        if (data) {
+          setUserData(data);
+          setName(data.name || "");
+          if (data.image) setProfileImage({ uri: data.image });
+        } else {
+          setUserData(null);
+          setName("");
+          setProfileImage(null);
         }
-      }
-      setLoading(false);
+        setLoading(false);
+      });
     };
-    loadUser();
+
+    setupListener();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
-  // ---------- Pick Image ----------
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
@@ -85,11 +87,7 @@ export default function EditProfile({ navigation }) {
   const uploadImageToCloudinary = async (uri) => {
     try {
       const formData = new FormData();
-      formData.append("file", {
-        uri,
-        type: "image/jpeg",
-        name: "profile.jpg",
-      });
+      formData.append("file", { uri, type: "image/jpeg", name: "profile.jpg" });
       formData.append("upload_preset", UPLOAD_PRESET);
 
       const res = await axios.post(
@@ -105,32 +103,28 @@ export default function EditProfile({ navigation }) {
 
   // ---------- Save Profile ----------
   const handleSaveProfile = async () => {
+    if (!userData?.id) {
+      Alert.alert("Error", "User data not loaded yet.");
+      return;
+    }
+
     try {
       setUploading(true);
-      let imageUrl = existingImage;
+
+      let imageUrl = profileImage?.uri || "";
 
       if (pickedNewImage && profileImage?.uri) {
         const uploaded = await uploadImageToCloudinary(profileImage.uri);
-        if (uploaded) {
-          imageUrl = uploaded;
-        }
+        if (uploaded) imageUrl = uploaded;
       }
 
-      const user = auth.currentUser;
-      if (!user) {
-        Alert.alert("Error", "No user is logged in.");
-        setUploading(false);
-        return;
-      }
-
-      const userRef = doc(db, "Users", user.uid);
+      const userRef = doc(db, "Users", userData.id); // use user ID from Firestore
       await updateDoc(userRef, {
         name,
         image: imageUrl,
         updatedAt: new Date(),
       });
 
-      setExistingImage(imageUrl);
       setPickedNewImage(false);
       setUploading(false);
       showToast({
@@ -146,6 +140,7 @@ export default function EditProfile({ navigation }) {
         title: "Profile Update",
         message: "Failed to update profile.",
       });
+      console.log("EditProfile error:", error);
     }
   };
 

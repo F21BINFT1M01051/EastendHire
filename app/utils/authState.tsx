@@ -8,31 +8,34 @@ import { auth, db } from "../../firebase";
  * @returns {() => void} unsubscribe function
  */
 export const listenToUser = (callback) => {
-  // Keep a reference to the Firestore unsubscribe so we can clean it up
   let userDocUnsub = null;
 
   const authUnsub = onAuthStateChanged(auth, (firebaseUser) => {
-    // Clean up any old doc listener
+    console.log("Auth state changed - User:", firebaseUser ? firebaseUser.uid : "null");
+
     if (userDocUnsub) {
       userDocUnsub();
       userDocUnsub = null;
     }
 
     if (!firebaseUser) {
+      console.log("No user, calling callback with null");
       callback(null);
       return;
     }
 
     const userRef = doc(db, "Users", firebaseUser.uid);
+    console.log("Setting up snapshot listener for user:", firebaseUser.uid);
 
-    // Subscribe to document changes
     userDocUnsub = onSnapshot(
       userRef,
       (snap) => {
+        console.log("User doc snapshot received:", snap.exists());
         if (snap.exists()) {
           callback({ uid: firebaseUser.uid, ...snap.data() });
         } else {
-          callback({ uid: firebaseUser.uid, profile: null });
+          console.log("User document doesn't exist");
+          callback(null);
         }
       },
       (err) => {
@@ -42,8 +45,8 @@ export const listenToUser = (callback) => {
     );
   });
 
-  // Return one function to clean up both listeners
   return () => {
+    console.log("Unsubscribing from auth listener");
     authUnsub();
     if (userDocUnsub) userDocUnsub();
   };
