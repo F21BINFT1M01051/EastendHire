@@ -37,6 +37,7 @@ const InputField = ({
         {
           borderColor: error ? "red" : isFocused ? COLORS.black : "transparent",
           borderWidth: 1,
+          backgroundColor:isFocused ? COLORS.white : COLORS.input
         },
       ]}
     >

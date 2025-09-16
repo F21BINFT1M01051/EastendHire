@@ -26,6 +26,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../../firebase";
 import { showToast } from "../utils/toastMessage";
 import { saveCredentials } from "../utils/storageHelper";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 let validationSchema = yup.object({
   email: yup.string().email("Invalid email").required("Email is required"),
@@ -50,6 +51,7 @@ export default function SignIn({ navigation }) {
           values.password
         );
         await saveCredentials(values.email, values.password);
+         await AsyncStorage.setItem("isLoggedOut", "false");
         navigation.navigate("BottomTabs");
         showToast({
           type: "success",

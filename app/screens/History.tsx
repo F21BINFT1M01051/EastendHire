@@ -26,15 +26,16 @@ import {
   deleteDoc,
   getDocs,
 } from "firebase/firestore";
-import { auth, db } from "../../firebase";
-import { useFocusEffect } from "@react-navigation/native";
+import { db } from "../../firebase";
 import { listenToUserData } from "../utils/userData";
+import { useExitAppOnBack } from "../utils/appBack";
 
 export default function History({ navigation }) {
   const [inspections, setInspections] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [userData, setUserData] = useState(null);
+  useExitAppOnBack();
 
   useEffect(() => {
     let unsub;

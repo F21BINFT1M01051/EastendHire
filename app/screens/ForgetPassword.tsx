@@ -270,6 +270,7 @@ const styles = StyleSheet.create({
     color: COLORS.gray3,
     textAlign: "center",
     marginBottom: RFPercentage(3),
+    fontFamily:"Regular"
   },
   modalButton: {
     backgroundColor: COLORS.black,

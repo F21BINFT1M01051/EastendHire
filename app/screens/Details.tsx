@@ -15,29 +15,55 @@ import { COLORS } from "../theme/constants";
 export default function DetailsScreen({ route, navigation }) {
   const { data } = route.params;
 
+  const inspectionResults = [
+    data.brakes,
+    data.lights,
+    data.seatBelt,
+    data.handBrake,
+  ];
+
+  // Filter only pass/fail for summary
+  const validResults = inspectionResults.filter(
+    (item) => item?.toLowerCase() === "pass" || item?.toLowerCase() === "fail"
+  );
+
+  const totalChecks = validResults.length;
+  const passedCount = validResults.filter((item) => item.toLowerCase() === "pass")
+    .length;
+  const failedCount = validResults.filter((item) => item.toLowerCase() === "fail")
+    .length;
+  const notInspectedCount = inspectionResults.length - validResults.length;
+
+  // Badge component for pass/fail/unknown
   const StatusBadge = ({ status }) => {
     const lowerStatus = status?.toLowerCase();
     const isPass = lowerStatus === "pass";
+    const isFail = lowerStatus === "fail";
+    const isUnknown = !status || (!isPass && !isFail);
+
+    const bgColor = isPass
+      ? COLORS.successLight
+      : isFail
+      ? COLORS.errorLight
+      : COLORS.grayLight; // gray for unknown
+
+    const iconName = isPass
+      ? "checkmark-circle"
+      : isFail
+      ? "close-circle"
+      : "help-circle"; // help icon for unknown
+
+    const iconColor = isPass
+      ? COLORS.success
+      : isFail
+      ? COLORS.error
+      : COLORS.gray4;
 
     return (
-      <View
-        style={[
-          styles.statusBadge,
-          { backgroundColor: isPass ? COLORS.successLight : COLORS.errorLight },
-        ]}
-      >
-        <Ionicons
-          name={isPass ? "checkmark-circle" : "close-circle"}
-          size={RFPercentage(1.8)}
-          color={isPass ? COLORS.success : COLORS.error}
-        />
-        <Text
-          style={[
-            styles.statusText,
-            { color: isPass ? COLORS.success : COLORS.error },
-          ]}
-        >
-          {status}
+      <View style={[styles.statusBadge, { backgroundColor: bgColor }]}>
+        <Ionicons name={iconName} size={RFPercentage(2)} color={iconColor} />
+        <Text style={[styles.statusText, { color: iconColor }]}>
+          {isUnknown ? "Not Inspected" : status}
         </Text>
       </View>
     );
@@ -176,23 +202,34 @@ export default function DetailsScreen({ route, navigation }) {
           <Text style={styles.summaryTitle}>Inspection Summary</Text>
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryNumber}>4</Text>
+              <Text style={styles.summaryNumber}>{inspectionResults.length}</Text>
               <Text style={styles.summaryLabel}>Checks</Text>
             </View>
             <View style={styles.summaryDivider} />
             <View style={styles.summaryItem}>
               <Text style={[styles.summaryNumber, { color: COLORS.success }]}>
-                3
+                {passedCount}
               </Text>
               <Text style={styles.summaryLabel}>Passed</Text>
             </View>
             <View style={styles.summaryDivider} />
             <View style={styles.summaryItem}>
               <Text style={[styles.summaryNumber, { color: COLORS.error }]}>
-                1
+                {failedCount}
               </Text>
               <Text style={styles.summaryLabel}>Failed</Text>
             </View>
+            {notInspectedCount > 0 && (
+              <>
+                <View style={styles.summaryDivider} />
+                <View style={styles.summaryItem}>
+                  <Text style={[styles.summaryNumber, { color: COLORS.gray4 }]}>
+                    {notInspectedCount}
+                  </Text>
+                  <Text style={styles.summaryLabel}>Not Inspected</Text>
+                </View>
+              </>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -200,15 +237,10 @@ export default function DetailsScreen({ route, navigation }) {
   );
 }
 
+// Styles (unchanged)
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.white,
-  },
-  scrollView: {
-    flex: 1,
-    padding: RFPercentage(2),
-  },
+  container: { flex: 1, backgroundColor: COLORS.white },
+  scrollView: { flex: 1, padding: RFPercentage(2) },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -216,132 +248,39 @@ const styles = StyleSheet.create({
     marginTop: RFPercentage(6),
     marginBottom: RFPercentage(2),
   },
-  backButton: {
-    padding: RFPercentage(1),
-  },
-  headerTitle: {
-    fontSize: RFPercentage(2.4),
-    fontFamily: "Bold",
-    color: COLORS.dark,
-  },
-  headerRight: {
-    width: RFPercentage(5),
-  },
+  backButton: { padding: RFPercentage(1) },
+  headerTitle: { fontSize: RFPercentage(2.4), fontFamily: "Bold", color: COLORS.dark },
+  headerRight: { width: RFPercentage(5) },
   card: {
     backgroundColor: COLORS.white,
     borderRadius: RFPercentage(1.5),
     padding: RFPercentage(2.5),
     marginBottom: RFPercentage(2),
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
   },
-  cardTitle: {
-    fontSize: RFPercentage(2),
-    fontFamily: "Bold",
-    color: COLORS.dark,
-    marginBottom: RFPercentage(2),
-  },
-  cardContent: {
-    paddingHorizontal: RFPercentage(0.5),
-  },
-  detailRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: RFPercentage(1.5),
-  },
-  rowLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  rowRight: {
-    marginLeft: RFPercentage(1),
-  },
-  rowIcon: {
-    marginRight: RFPercentage(1.5),
-  },
-  rowLabel: {
-    fontSize: RFPercentage(1.9),
-    fontFamily: "SemiBold",
-    color: COLORS.gray4,
-  },
-  rowValue: {
-    fontSize: RFPercentage(1.8),
-    fontFamily: "Medium",
-    color: COLORS.dark,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: COLORS.lightGray,
-    marginVertical: RFPercentage(0.5),
-  },
-  statusBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: RFPercentage(1.2),
-    paddingVertical: RFPercentage(0.6),
-    borderRadius: RFPercentage(1),
-  },
-  statusText: {
-    fontSize: RFPercentage(1.6),
-    fontFamily: "SemiBold",
-    marginLeft: RFPercentage(0.5),
-  },
-  commentCard: {
-    flexDirection: "row",
-    backgroundColor: COLORS.lightBlue,
-    borderRadius: RFPercentage(1),
-    padding: RFPercentage(2),
-  },
-  commentIcon: {
-    marginRight: RFPercentage(1.5),
-    marginTop: RFPercentage(0.3),
-  },
-  commentText: {
-    flex: 1,
-    fontSize: RFPercentage(1.8),
-    color: COLORS.gray3,
-    lineHeight: RFPercentage(2.5),
-    fontFamily: "Regular",
-  },
-  summaryCard: {
-    alignItems: "center",
-  },
-  summaryTitle: {
-    fontSize: RFPercentage(2),
-    fontFamily: "Bold",
-    color: COLORS.dark,
-    marginBottom: RFPercentage(2),
-    textAlign: "center",
-  },
-  summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%",
-  },
-  summaryItem: {
-    alignItems: "center",
-  },
-  summaryNumber: {
-    fontSize: RFPercentage(3.5),
-    fontFamily: "Bold",
-    color: COLORS.black,
-    marginBottom: RFPercentage(0.5),
-  },
-  summaryLabel: {
-    fontSize: RFPercentage(1.6),
-    fontFamily: "Medium",
-    color: COLORS.gray4,
-  },
-  summaryDivider: {
-    width: 1,
-    backgroundColor: COLORS.lightGray,
-  },
+  cardTitle: { fontSize: RFPercentage(2), fontFamily: "Bold", color: COLORS.dark, marginBottom: RFPercentage(2) },
+  cardContent: { paddingHorizontal: RFPercentage(0.5) },
+  detailRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: RFPercentage(1.5) },
+  rowLeft: { flexDirection: "row", alignItems: "center", flex: 1 },
+  rowRight: { marginLeft: RFPercentage(1) },
+  rowIcon: { marginRight: RFPercentage(1.5) },
+  rowLabel: { fontSize: RFPercentage(1.9), fontFamily: "SemiBold", color: COLORS.gray4 },
+  rowValue: { fontSize: RFPercentage(1.8), fontFamily: "Medium", color: COLORS.dark },
+  divider: { height: 1, backgroundColor: COLORS.lightGray, marginVertical: RFPercentage(0.5) },
+  statusBadge: { flexDirection: "row", alignItems: "center", paddingHorizontal: RFPercentage(1.2), paddingVertical: RFPercentage(0.6), borderRadius: RFPercentage(1) },
+  statusText: { fontSize: RFPercentage(1.6), fontFamily: "SemiBold", marginLeft: RFPercentage(0.5) },
+  commentCard: { flexDirection: "row", backgroundColor: COLORS.lightBlue, borderRadius: RFPercentage(1), padding: RFPercentage(2) },
+  commentIcon: { marginRight: RFPercentage(1.5), marginTop: RFPercentage(0.3) },
+  commentText: { flex: 1, fontSize: RFPercentage(1.8), color: COLORS.gray3, lineHeight: RFPercentage(2.5), fontFamily: "Regular" },
+  summaryCard: { alignItems: "center" },
+  summaryTitle: { fontSize: RFPercentage(2), fontFamily: "Bold", color: COLORS.dark, marginBottom: RFPercentage(2), textAlign: "center" },
+  summaryRow: { flexDirection: "row", justifyContent: "space-around", width: "100%" },
+  summaryItem: { alignItems: "center" },
+  summaryNumber: { fontSize: RFPercentage(3.5), fontFamily: "Bold", color: COLORS.black, marginBottom: RFPercentage(0.5) },
+  summaryLabel: { fontSize: RFPercentage(1.6), fontFamily: "Medium", color: COLORS.gray4 },
+  summaryDivider: { width: 1, backgroundColor: COLORS.lightGray },
 });

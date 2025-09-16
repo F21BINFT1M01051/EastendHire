@@ -15,7 +15,6 @@ import {
   Modal,
   ActivityIndicator,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { RFPercentage } from "react-native-responsive-fontsize";
 import { IMAGES } from "../theme/constants";
 import {
@@ -25,12 +24,10 @@ import {
   MaterialIcons,
 } from "@expo/vector-icons";
 import { COLORS } from "../theme/constants";
-import { useFocusEffect } from "@react-navigation/native";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "../../firebase";
+import { db } from "../../firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { listenToUser } from "../utils/authState";
 import { listenToUserData } from "../utils/userData";
+import { useExitAppOnBack } from "../utils/appBack";
 
 export default function HomeScreen() {
   const [registration, setRegistration] = useState("");
@@ -42,17 +39,27 @@ export default function HomeScreen() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [userData, setUserData] = useState(null);
   const [saving, setSaving] = useState(false);
-
+  const [loading, setLoading] = useState(true);
   const today = new Date().toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
   });
 
+  useExitAppOnBack();
+
   useEffect(() => {
     let unsub;
     const setupListener = async () => {
-      unsub = await listenToUserData(setUserData); // setUserData state will update in real-time
+      try {
+        unsub = await listenToUserData((data) => {
+          setUserData(data);
+          setLoading(false);
+        });
+      } catch (error) {
+        console.log("Error fetching user data:", error);
+        setLoading(false);
+      }
     };
     setupListener();
 
@@ -61,7 +68,6 @@ export default function HomeScreen() {
     };
   }, []);
 
-  console.log("");
   const handleClear = () => {
     setRegistration("");
     setBrakes(null);
@@ -80,7 +86,7 @@ export default function HomeScreen() {
         return;
       }
       const inspectionData = {
-        userId: userData.userId, // <-- use userId from Users collection
+        userId: userData.userId,
         registration: registration.trim(),
         brakes,
         lights,
@@ -145,15 +151,15 @@ export default function HomeScreen() {
           >
             {state === "pass" && (
               <Ionicons
-                name="checkmark"
+                name="checkmark-circle"
                 size={RFPercentage(2.3)}
-                color={COLORS.white}
+                color={COLORS.success}
               />
             )}
             <Text
               style={[
                 styles.optionText,
-                state === "pass" && styles.selectedText,
+                state === "pass" && styles.selectedText1,
               ]}
             >
               Pass
@@ -170,15 +176,15 @@ export default function HomeScreen() {
           >
             {state === "fail" && (
               <Ionicons
-                name="close"
+                name="close-circle"
                 size={RFPercentage(2.3)}
-                color={COLORS.white}
+                color={COLORS.error}
               />
             )}
             <Text
               style={[
                 styles.optionText,
-                state === "fail" && styles.selectedText,
+                state === "fail" && styles.selectedText2,
               ]}
             >
               Fail
@@ -191,7 +197,10 @@ export default function HomeScreen() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={{ flex: 1, backgroundColor: COLORS.white }}>
+      <ScrollView
+        style={{ flex: 1, backgroundColor: COLORS.white }}
+        keyboardShouldPersistTaps="always"
+      >
         <StatusBar
           barStyle="dark-content"
           translucent
@@ -217,15 +226,19 @@ export default function HomeScreen() {
             {/* Header Section */}
             <View style={styles.header}>
               <View style={styles.avatarContainer}>
-                <Image
-                  source={
-                    userData?.image ? { uri: userData.image } : IMAGES.img
-                  }
-                  resizeMode="cover"
-                  style={userData?.image ? styles.avatar : styles.default}
-                />
+                {loading ? (
+                  <ActivityIndicator size={"small"} color={COLORS.gray} />
+                ) : (
+                  <Image
+                    source={
+                      userData?.image ? { uri: userData.image } : IMAGES.img
+                    }
+                    resizeMode="cover"
+                    style={userData?.image ? styles.avatar : styles.default}
+                  />
+                )}
               </View>
-              <Text style={styles.greeting}>Welcome Back!</Text>
+              <Text style={styles.greeting}>Welcome!</Text>
             </View>
 
             <Text style={styles.date}>
@@ -308,18 +321,16 @@ export default function HomeScreen() {
             <View style={styles.btnRow}>
               <TouchableOpacity
                 activeOpacity={0.8}
-                style={[
-                  styles.btn,
-                  styles.saveBtn,
-                  (!hasFormData || saving) && { opacity: 0.8 },
-                ]}
+                style={[styles.btn, styles.saveBtn]}
                 onPress={handleSave}
                 disabled={!hasFormData || saving}
               >
                 {saving ? (
                   <ActivityIndicator size="small" color={COLORS.white} />
                 ) : (
-                  <Text style={styles.btnText}>Save</Text>
+                  <Text style={[styles.btnText, { color: COLORS.white }]}>
+                    Save
+                  </Text>
                 )}
               </TouchableOpacity>
 
@@ -368,7 +379,7 @@ export default function HomeScreen() {
             </View>
           </View>
         </Modal>
-      </View>
+      </ScrollView>
     </TouchableWithoutFeedback>
   );
 }
@@ -377,6 +388,7 @@ const styles = StyleSheet.create({
   container: {
     paddingTop: RFPercentage(7),
     paddingHorizontal: RFPercentage(3),
+    flexGrow: 1,
   },
   header: {
     flexDirection: "row",
@@ -490,18 +502,23 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   passSelected: {
-    backgroundColor: COLORS.black,
+    backgroundColor: COLORS.successLight,
   },
   failSelected: {
-    backgroundColor: COLORS.black,
+    backgroundColor: COLORS.errorLight,
   },
   optionText: {
     color: COLORS.gray2,
-    fontSize: RFPercentage(1.7),
+    fontSize: RFPercentage(1.8),
     fontFamily: "Medium",
   },
-  selectedText: {
-    color: COLORS.white,
+  selectedText1: {
+    color: COLORS.success,
+    fontFamily: "SemiBold",
+  },
+  selectedText2: {
+    color: COLORS.error,
+    fontFamily: "SemiBold",
   },
   btnRow: {
     flexDirection: "row",
@@ -526,8 +543,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#c8c5c5ff",
   },
   btnText: {
-    color: COLORS.white,
-    fontSize: RFPercentage(1.8),
+    color: COLORS.gray3,
+    fontSize: RFPercentage(1.9),
     fontFamily: "Medium",
   },
   modalOverlay: {

@@ -35,10 +35,9 @@ import {
 import { auth, db } from "../../firebase";
 import { IMAGES, COLORS } from "../theme/constants";
 import { showToast } from "../utils/toastMessage";
-import { useFocusEffect } from "@react-navigation/native";
 import { getCredentials, clearCredentials } from "../utils/storageHelper";
-import { listenToUser } from "../utils/authState";
 import { listenToUserData } from "../utils/userData";
+import { useExitAppOnBack } from "../utils/appBack";
 
 const Profile = () => {
   const navigation = useNavigation();
@@ -47,11 +46,12 @@ const Profile = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [actionType, setActionType] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  useExitAppOnBack();
 
   useEffect(() => {
     let unsub;
     const setupListener = async () => {
-      unsub = await listenToUserData(setUserData); // setUserData state will update in real-time
+      unsub = await listenToUserData(setUserData);
     };
     setupListener();
 
@@ -66,7 +66,11 @@ const Profile = () => {
       if (actionType === "logout") {
         await AsyncStorage.removeItem("userCredentials");
         await signOut(auth);
-        navigation.navigate("SignIn");
+        await AsyncStorage.setItem("isLoggedOut", "true");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "SignIn" }],
+        });
         showToast({
           type: "success",
           title: "Signed Out",
@@ -103,7 +107,10 @@ const Profile = () => {
 
         await deleteUser(user);
         await clearCredentials();
-        navigation.navigate("Onboarding");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Onboarding" }],
+        });
         showToast({
           type: "success",
           title: "Account Deleted",
@@ -118,7 +125,7 @@ const Profile = () => {
       setActionLoading(false); // stop loader
     }
   };
-
+  console.log(userData);
   return (
     <LinearGradient
       colors={[COLORS.white, COLORS.white]}
@@ -135,7 +142,8 @@ const Profile = () => {
 
         <View style={styles.imageContainer}>
           <Image
-            source={userData?.image ? { uri: userData.image } : IMAGES.img}
+            // source={{ uri: userData?.image }}
+            source={userData?.image ? { uri: userData?.image } : IMAGES.img}
             resizeMode="cover"
             style={userData?.image ? styles.profileImage : styles.default}
           />

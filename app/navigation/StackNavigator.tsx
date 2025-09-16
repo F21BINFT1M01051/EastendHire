@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { ActivityIndicator, View } from "react-native";
-
 import Onboarding from "../screens/OnBoarding";
 import SignUp from "../screens/SignUp";
 import SignIn from "../screens/Login";
@@ -14,6 +13,7 @@ import ForgetPassword from "../screens/ForgetPassword";
 import { getCredentials } from "../utils/storageHelper";
 import { COLORS } from "../theme/constants";
 import { RFPercentage } from "react-native-responsive-fontsize";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export type RootStackParamList = {
   Onboarding: undefined;
@@ -33,14 +33,18 @@ export default function MainNavigator() {
   useEffect(() => {
     const loadUser = async () => {
       try {
+        const isLoggedOut = await AsyncStorage.getItem("isLoggedOut");
         const creds = await getCredentials();
-        if (creds) {
+
+        if (isLoggedOut === "true") {
+          setInitialRoute("SignIn");
+        } else if (creds) {
           setInitialRoute("BottomTabs");
         } else {
           setInitialRoute("Onboarding");
         }
       } catch (e) {
-        console.log("Error loading credentials:", e);
+        console.log("Error loading user state:", e);
         setInitialRoute("Onboarding");
       }
     };

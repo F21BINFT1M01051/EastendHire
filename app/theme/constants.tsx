@@ -34,7 +34,7 @@ export const COLORS = {
   successLight: "#eafaf1",
   error: "#e74c3c",
   errorLight: "#fdedec",
-  lightBlue: "#e7f9fdff",
+  lightBlue: "#f4f4f4ff",
   lightGray: "#eaeaea",
   dark: "#2d3436",
 

@@ -80,7 +80,7 @@ export default function BottomTabs() {
       ]}
       shadowStyle={styles.shadow}
       height={Platform.OS === "ios" ? RFPercentage(8) : RFPercentage(9)}
-      circleWidth={50}
+      circleWidth={90}
       bgColor={COLORS.tab}
       initialRouteName="home"
       borderWidth={2}
