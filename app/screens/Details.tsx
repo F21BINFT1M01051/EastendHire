@@ -19,7 +19,11 @@ export default function DetailsScreen({ route, navigation }) {
     data.brakes,
     data.lights,
     data.seatBelt,
-    data.handBrake,
+    data.strobeLight,
+    data.reverseBeeper,
+    data.brakeLights,
+    data.tyresCondition,
+    data.horn,
   ];
 
   // Filter only pass/fail for summary
@@ -28,10 +32,12 @@ export default function DetailsScreen({ route, navigation }) {
   );
 
   const totalChecks = validResults.length;
-  const passedCount = validResults.filter((item) => item.toLowerCase() === "pass")
-    .length;
-  const failedCount = validResults.filter((item) => item.toLowerCase() === "fail")
-    .length;
+  const passedCount = validResults.filter(
+    (item) => item.toLowerCase() === "pass"
+  ).length;
+  const failedCount = validResults.filter(
+    (item) => item.toLowerCase() === "fail"
+  ).length;
   const notInspectedCount = inspectionResults.length - validResults.length;
 
   // Badge component for pass/fail/unknown
@@ -157,6 +163,7 @@ export default function DetailsScreen({ route, navigation }) {
                 showStatus={true}
               />
               <View style={styles.divider} />
+
               <DetailRow
                 icon="bulb-outline"
                 label="Lights"
@@ -164,6 +171,7 @@ export default function DetailsScreen({ route, navigation }) {
                 showStatus={true}
               />
               <View style={styles.divider} />
+
               <DetailRow
                 icon="lock-closed-outline"
                 label="Seat Belt"
@@ -171,10 +179,43 @@ export default function DetailsScreen({ route, navigation }) {
                 showStatus={true}
               />
               <View style={styles.divider} />
+
               <DetailRow
-                icon="hand-left-outline"
-                label="Hand Brake"
-                value={data.handBrake}
+                icon="flash-outline"
+                label="Strobe Light"
+                value={data.strobeLight}
+                showStatus={true}
+              />
+              <View style={styles.divider} />
+
+              <DetailRow
+                icon="play-back-outline"
+                label="Reverse Beeper"
+                value={data.reverseBeeper}
+                showStatus={true}
+              />
+              <View style={styles.divider} />
+
+              <DetailRow
+                icon="car-sport-outline"
+                label="Brake Lights"
+                value={data.brakeLights}
+                showStatus={true}
+              />
+              <View style={styles.divider} />
+
+              <DetailRow
+                icon="trail-sign-outline"
+                label="Tyres Condition"
+                value={data.tyresCondition}
+                showStatus={true}
+              />
+              <View style={styles.divider} />
+
+              <DetailRow
+                icon="musical-note-outline"
+                label="Horn"
+                value={data.horn}
                 showStatus={true}
               />
             </>
@@ -202,7 +243,9 @@ export default function DetailsScreen({ route, navigation }) {
           <Text style={styles.summaryTitle}>Inspection Summary</Text>
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryNumber}>{inspectionResults.length}</Text>
+              <Text style={styles.summaryNumber}>
+                {inspectionResults.length}
+              </Text>
               <Text style={styles.summaryLabel}>Checks</Text>
             </View>
             <View style={styles.summaryDivider} />
@@ -249,7 +292,11 @@ const styles = StyleSheet.create({
     marginBottom: RFPercentage(2),
   },
   backButton: { padding: RFPercentage(1) },
-  headerTitle: { fontSize: RFPercentage(2.4), fontFamily: "Bold", color: COLORS.dark },
+  headerTitle: {
+    fontSize: RFPercentage(2.4),
+    fontFamily: "Bold",
+    color: COLORS.dark,
+  },
   headerRight: { width: RFPercentage(5) },
   card: {
     backgroundColor: COLORS.white,
@@ -262,25 +309,87 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  cardTitle: { fontSize: RFPercentage(2), fontFamily: "Bold", color: COLORS.dark, marginBottom: RFPercentage(2) },
+  cardTitle: {
+    fontSize: RFPercentage(2),
+    fontFamily: "Bold",
+    color: COLORS.dark,
+    marginBottom: RFPercentage(2),
+  },
   cardContent: { paddingHorizontal: RFPercentage(0.5) },
-  detailRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: RFPercentage(1.5) },
+  detailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: RFPercentage(1.5),
+  },
   rowLeft: { flexDirection: "row", alignItems: "center", flex: 1 },
   rowRight: { marginLeft: RFPercentage(1) },
   rowIcon: { marginRight: RFPercentage(1.5) },
-  rowLabel: { fontSize: RFPercentage(1.9), fontFamily: "SemiBold", color: COLORS.gray4 },
-  rowValue: { fontSize: RFPercentage(1.8), fontFamily: "Medium", color: COLORS.dark },
-  divider: { height: 1, backgroundColor: COLORS.lightGray, marginVertical: RFPercentage(0.5) },
-  statusBadge: { flexDirection: "row", alignItems: "center", paddingHorizontal: RFPercentage(1.2), paddingVertical: RFPercentage(0.6), borderRadius: RFPercentage(1) },
-  statusText: { fontSize: RFPercentage(1.6), fontFamily: "SemiBold", marginLeft: RFPercentage(0.5) },
-  commentCard: { flexDirection: "row", backgroundColor: COLORS.lightBlue, borderRadius: RFPercentage(1), padding: RFPercentage(2) },
+  rowLabel: {
+    fontSize: RFPercentage(1.9),
+    fontFamily: "SemiBold",
+    color: COLORS.gray4,
+  },
+  rowValue: {
+    fontSize: RFPercentage(1.8),
+    fontFamily: "Medium",
+    color: COLORS.dark,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: COLORS.lightGray,
+    marginVertical: RFPercentage(0.5),
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: RFPercentage(1.2),
+    paddingVertical: RFPercentage(0.6),
+    borderRadius: RFPercentage(1),
+  },
+  statusText: {
+    fontSize: RFPercentage(1.6),
+    fontFamily: "SemiBold",
+    marginLeft: RFPercentage(0.5),
+  },
+  commentCard: {
+    flexDirection: "row",
+    backgroundColor: COLORS.lightBlue,
+    borderRadius: RFPercentage(1),
+    padding: RFPercentage(2),
+  },
   commentIcon: { marginRight: RFPercentage(1.5), marginTop: RFPercentage(0.3) },
-  commentText: { flex: 1, fontSize: RFPercentage(1.8), color: COLORS.gray3, lineHeight: RFPercentage(2.5), fontFamily: "Regular" },
+  commentText: {
+    flex: 1,
+    fontSize: RFPercentage(1.8),
+    color: COLORS.gray3,
+    lineHeight: RFPercentage(2.5),
+    fontFamily: "Regular",
+  },
   summaryCard: { alignItems: "center" },
-  summaryTitle: { fontSize: RFPercentage(2), fontFamily: "Bold", color: COLORS.dark, marginBottom: RFPercentage(2), textAlign: "center" },
-  summaryRow: { flexDirection: "row", justifyContent: "space-around", width: "100%" },
+  summaryTitle: {
+    fontSize: RFPercentage(2),
+    fontFamily: "Bold",
+    color: COLORS.dark,
+    marginBottom: RFPercentage(2),
+    textAlign: "center",
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
+  },
   summaryItem: { alignItems: "center" },
-  summaryNumber: { fontSize: RFPercentage(3.5), fontFamily: "Bold", color: COLORS.black, marginBottom: RFPercentage(0.5) },
-  summaryLabel: { fontSize: RFPercentage(1.6), fontFamily: "Medium", color: COLORS.gray4 },
+  summaryNumber: {
+    fontSize: RFPercentage(3.5),
+    fontFamily: "Bold",
+    color: COLORS.black,
+    marginBottom: RFPercentage(0.5),
+  },
+  summaryLabel: {
+    fontSize: RFPercentage(1.6),
+    fontFamily: "Medium",
+    color: COLORS.gray4,
+  },
   summaryDivider: { width: 1, backgroundColor: COLORS.lightGray },
 });

@@ -35,12 +35,17 @@ export default function HomeScreen() {
   const [brakes, setBrakes] = useState(null);
   const [lights, setLights] = useState(null);
   const [seatBelt, setSeatBelt] = useState(null);
-  const [handBrake, setHandBrake] = useState(null);
   const [comments, setComments] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [userData, setUserData] = useState(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [strobeLight, setStrobeLight] = useState(null);
+  const [reverseBeeper, setReverseBeeper] = useState(null);
+  const [brakeLights, setBrakeLights] = useState(null);
+  const [tyresCondition, setTyresCondition] = useState(null);
+  const [horn, setHorn] = useState(null);
+
   const today = new Date().toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
@@ -74,7 +79,11 @@ export default function HomeScreen() {
     setBrakes(null);
     setLights(null);
     setSeatBelt(null);
-    setHandBrake(null);
+    setStrobeLight(null);
+    setReverseBeeper(null);
+    setBrakeLights(null);
+    setTyresCondition(null);
+    setHorn(null);
     setComments("");
   };
 
@@ -100,7 +109,11 @@ export default function HomeScreen() {
         brakes,
         lights,
         seatBelt,
-        handBrake,
+        strobeLight,
+        reverseBeeper,
+        brakeLights,
+        tyresCondition,
+        horn,
         comments: comments.trim(),
         createdAt: serverTimestamp(),
       };
@@ -117,11 +130,15 @@ export default function HomeScreen() {
 
   const hasFormData =
     registration.trim() !== "" ||
-    (brakes !== null ||
-      lights !== null ||
-      seatBelt !== null ||
-      handBrake !== null ||
-      comments.trim() !== "");
+    brakes !== null ||
+    lights !== null ||
+    seatBelt !== null ||
+    strobeLight !== null ||
+    reverseBeeper !== null ||
+    brakeLights !== null ||
+    tyresCondition !== null ||
+    horn !== null ||
+    comments.trim() !== "";
 
   const renderOption = (label, state, setState, iconName, iconType) => {
     let IconComponent;
@@ -309,11 +326,44 @@ export default function HomeScreen() {
               "seatbelt",
               "MaterialCommunityIcons"
             )}
+
             {renderOption(
-              "Hand Brake",
-              handBrake,
-              setHandBrake,
-              "car-brake-retarder",
+              "Strobe Light",
+              strobeLight,
+              setStrobeLight,
+              "lightbulb-on-outline",
+              "MaterialCommunityIcons"
+            )}
+
+            {renderOption(
+              "Reverse Beeper",
+              reverseBeeper,
+              setReverseBeeper,
+              "backup-restore",
+              "MaterialCommunityIcons"
+            )}
+
+            {renderOption(
+              "Brake Lights",
+              brakeLights,
+              setBrakeLights,
+              "car-brake-alert",
+              "MaterialCommunityIcons"
+            )}
+
+            {renderOption(
+              "Tyres Condition",
+              tyresCondition,
+              setTyresCondition,
+              "car-tire-alert",
+              "MaterialCommunityIcons"
+            )}
+
+            {renderOption(
+              "Horn",
+              horn,
+              setHorn,
+              "bullhorn-outline",
               "MaterialCommunityIcons"
             )}
 

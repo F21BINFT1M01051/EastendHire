@@ -109,7 +109,16 @@ export default function History({ navigation }) {
   // Add pass/fail counts
   const enhancedHistory = useMemo(() => {
     return inspections.map((item) => {
-      const checks = ["brakes", "lights", "seatBelt", "handBrake"];
+      const checks = [
+        "brakes",
+        "lights",
+        "seatBelt",
+        "strobeLight",
+        "reverseBeeper",
+        "brakeLights",
+        "tyresCondition",
+        "horn",
+      ];
       const passed = checks.filter((c) => item[c] === "pass").length;
       const failed = checks.length - passed;
 
@@ -172,7 +181,15 @@ export default function History({ navigation }) {
         <StatusPill status={item.status} />
       </View>
       <View style={{ flexDirection: "row", alignItems: "center" }}>
-        <Text style={{color:COLORS.gray4, fontFamily:"SemiBold", fontSize:RFPercentage(1.6)}}>Vehicle Reg:</Text>
+        <Text
+          style={{
+            color: COLORS.gray4,
+            fontFamily: "SemiBold",
+            fontSize: RFPercentage(1.6),
+          }}
+        >
+          Vehicle Reg:
+        </Text>
         <Text style={styles.registration}> {item.registration}</Text>
       </View>
 

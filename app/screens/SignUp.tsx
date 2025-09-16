@@ -72,7 +72,7 @@ export default function SignUp({ navigation }) {
       showToast({
         type: "error",
         title: "Sign Up Failed",
-        message: "Email is already in use",
+        message: error.message,
       });
       console.log("Sign-up error:", error.message);
     } finally {

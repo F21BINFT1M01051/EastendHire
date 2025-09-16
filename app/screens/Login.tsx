@@ -51,7 +51,7 @@ export default function SignIn({ navigation }) {
           values.password
         );
         await saveCredentials(values.email, values.password);
-         await AsyncStorage.setItem("isLoggedOut", "false");
+        await AsyncStorage.setItem("isLoggedOut", "false");
         navigation.navigate("BottomTabs");
         showToast({
           type: "success",
@@ -63,7 +63,7 @@ export default function SignIn({ navigation }) {
         showToast({
           type: "error",
           title: "Sign In Failed",
-          message: `Invalid Credentials`,
+          message: error.message,
         });
         console.log("Sign-in error:", error.message);
       } finally {
