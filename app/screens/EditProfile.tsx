@@ -132,7 +132,7 @@ export default function EditProfile({ navigation }) {
         title: "Profile Update",
         message: "Profile updated successfully!",
       });
-      navigation.goBack();
+      // navigation.goBack();
     } catch (error) {
       setUploading(false);
       showToast({

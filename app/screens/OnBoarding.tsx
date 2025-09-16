@@ -46,7 +46,7 @@ export default function Onboarding({ navigation }) {
       <View style={styles.btnContainer}>
         <PrimaryButton
           title="Get Started"
-          onPress={() => navigation.navigate("SignUp")}
+          onPress={() => navigation.navigate("SignIn")}
         />
 
         <TouchableOpacity

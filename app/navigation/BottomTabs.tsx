@@ -79,7 +79,7 @@ export default function BottomTabs() {
         keyboardVisible && { display: "none" }, 
       ]}
       shadowStyle={styles.shadow}
-      height={Platform.OS === "ios" ? RFPercentage(8) : RFPercentage(9)}
+      height={Platform.OS === "ios" ? RFPercentage(8) : RFPercentage(10)}
       circleWidth={90}
       bgColor={COLORS.tab}
       initialRouteName="home"
@@ -159,5 +159,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    bottom:5
   },
 });

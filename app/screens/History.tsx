@@ -171,8 +171,10 @@ export default function History({ navigation }) {
         <Text style={styles.date}>{item.date}</Text>
         <StatusPill status={item.status} />
       </View>
-
-      <Text style={styles.registration}>{item.registration}</Text>
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <Text style={{color:COLORS.gray4, fontFamily:"SemiBold", fontSize:RFPercentage(1.6)}}>Vehicle Reg:</Text>
+        <Text style={styles.registration}> {item.registration}</Text>
+      </View>
 
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
@@ -385,10 +387,9 @@ const styles = StyleSheet.create({
     fontFamily: "SemiBold",
   },
   registration: {
-    fontSize: RFPercentage(1.8),
+    fontSize: RFPercentage(1.5),
     color: COLORS.gray,
-    marginBottom: RFPercentage(1.5),
-    fontFamily: "Medium",
+    fontFamily: "Regular",
   },
   statsContainer: {
     flexDirection: "row",

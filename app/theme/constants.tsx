@@ -21,7 +21,7 @@ export const COLORS = {
   placholder: "#999",
   gray4: "#444",
   white4: "#f0f0f0",
-  tab: "rgba(234, 234, 234, 1)",
+  tab: "rgba(224, 224, 224, 1)",
   placeholder2: "#808a8dff",
   input: "rgba(239, 240, 240, 0.8)",
   black3: "#0a0a0aff",

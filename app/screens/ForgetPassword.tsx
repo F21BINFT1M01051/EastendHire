@@ -55,7 +55,7 @@ const ForgetPassword = ({ navigation }) => {
 
       setModalTitle("Email Sent");
       setModalMessage(
-        "A password reset link has been sent to your email.\nIf you don’t see it in your inbox, please check your spam or junk folder."
+        "A password reset link has been sent to your email.\n\nIf you don’t see it in your inbox, please check your spam or junk folder."
       );
       setShowModal(true);
     } catch (error) {
@@ -70,101 +70,96 @@ const ForgetPassword = ({ navigation }) => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <>
-        <LinearGradient
-          colors={[COLORS.white, COLORS.white]}
-          style={styles.gradient}
-        >
-          <StatusBar
-            barStyle="dark-content"
-            translucent
-            backgroundColor="transparent"
-          />
+      <View style={styles.gradient}>
+        <StatusBar
+          barStyle="dark-content"
+          translucent
+          backgroundColor="transparent"
+        />
 
-          <View style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => navigation.goBack()}
-                style={styles.backButton}
-              >
-                <Feather
-                  name="chevron-left"
-                  size={RFPercentage(3.3)}
-                  color={COLORS.black}
-                />
-              </TouchableOpacity>
-              <Text style={styles.headerText}>Reset Password</Text>
-            </View>
-
-            {/* Input Field */}
-            <Formik
-              initialValues={{
-                email: "",
-              }}
-              validationSchema={validationSchema}
-              onSubmit={(values) => handleReset(values)}
+        <View style={styles.container}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => navigation.goBack()}
+              style={styles.backButton}
             >
-              {({
-                handleChange,
-                handleBlur,
-                handleSubmit,
-                values,
-                errors,
-                touched,
-              }) => (
-                <>
-                  <View style={styles.inputWrapper}>
-                    <InputField
-                      onChangeText={handleChange("email")}
-                      handleBlur={handleBlur("email")}
-                      value={values.email}
-                      placeholder="Enter Your Email"
-                      icon={(hasValue) => (
-                        <MaterialIcons
-                          name="email"
-                          size={RFPercentage(2.2)}
-                          color={hasValue ? COLORS.black : COLORS.gray}
-                        />
-                      )}
-                      error={touched.email && !!errors.email}
-                    />
-                    {touched.email && errors.email && (
-                      <>
-                        <View
+              <Feather
+                name="chevron-left"
+                size={RFPercentage(3.3)}
+                color={COLORS.black}
+              />
+            </TouchableOpacity>
+            <Text style={styles.headerText}>Reset Password</Text>
+          </View>
+
+          {/* Input Field */}
+          <Formik
+            initialValues={{
+              email: "",
+            }}
+            validationSchema={validationSchema}
+            onSubmit={(values) => handleReset(values)}
+          >
+            {({
+              handleChange,
+              handleBlur,
+              handleSubmit,
+              values,
+              errors,
+              touched,
+            }) => (
+              <>
+                <View style={styles.inputWrapper}>
+                  <InputField
+                    onChangeText={handleChange("email")}
+                    handleBlur={handleBlur("email")}
+                    value={values.email}
+                    placeholder="Enter Your Email"
+                    icon={(hasValue) => (
+                      <MaterialIcons
+                        name="email"
+                        size={RFPercentage(2.2)}
+                        color={hasValue ? COLORS.black : COLORS.gray}
+                      />
+                    )}
+                    error={touched.email && !!errors.email}
+                  />
+                  {touched.email && errors.email && (
+                    <>
+                      <View
+                        style={{
+                          marginTop: RFPercentage(0.5),
+                          width: "100%",
+                        }}
+                      >
+                        <Text
                           style={{
-                            marginTop: RFPercentage(0.5),
-                            width: "100%",
+                            color: "red",
+                            fontFamily: "Regular",
+                            fontSize: RFPercentage(1.7),
                           }}
                         >
-                          <Text
-                            style={{
-                              color: "red",
-                              fontFamily: "Regular",
-                              fontSize: RFPercentage(1.7),
-                            }}
-                          >
-                            {errors.email}
-                          </Text>
-                        </View>
-                      </>
-                    )}
-                  </View>
+                          {errors.email}
+                        </Text>
+                      </View>
+                    </>
+                  )}
+                </View>
 
-                  {/* Button */}
-                  <View style={styles.buttonWrapper}>
-                    <PrimaryButton
-                      title="Send Link"
-                      onPress={handleSubmit}
-                      loader={loading}
-                    />
-                  </View>
-                </>
-              )}
-            </Formik>
-          </View>
-        </LinearGradient>
+                {/* Button */}
+                <View style={styles.buttonWrapper}>
+                  <PrimaryButton
+                    title="Send Link"
+                    onPress={handleSubmit}
+                    loader={loading}
+                  />
+                </View>
+              </>
+            )}
+          </Formik>
+        </View>
         <Modal
           visible={showModal}
           transparent
@@ -198,7 +193,7 @@ const ForgetPassword = ({ navigation }) => {
             </View>
           </View>
         </Modal>
-      </>
+      </View>
     </TouchableWithoutFeedback>
   );
 };
@@ -208,6 +203,7 @@ export default ForgetPassword;
 const styles = StyleSheet.create({
   gradient: {
     flex: 1,
+    backgroundColor:COLORS.white
   },
   container: {
     width: "90%",
@@ -270,7 +266,7 @@ const styles = StyleSheet.create({
     color: COLORS.gray3,
     textAlign: "center",
     marginBottom: RFPercentage(3),
-    fontFamily:"Regular"
+    fontFamily: "Regular",
   },
   modalButton: {
     backgroundColor: COLORS.black,

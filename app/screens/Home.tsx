@@ -28,6 +28,7 @@ import { db } from "../../firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { listenToUserData } from "../utils/userData";
 import { useExitAppOnBack } from "../utils/appBack";
+import { showToast } from "../utils/toastMessage";
 
 export default function HomeScreen() {
   const [registration, setRegistration] = useState("");
@@ -78,6 +79,14 @@ export default function HomeScreen() {
   };
 
   const handleSave = async () => {
+    if (!registration.trim()) {
+      showToast({
+        type: "info",
+        title: "Inspection Report",
+        message: "Vehicle Registration is required!",
+      });
+      return;
+    }
     try {
       setSaving(true);
 
@@ -108,11 +117,11 @@ export default function HomeScreen() {
 
   const hasFormData =
     registration.trim() !== "" ||
-    brakes !== null ||
-    lights !== null ||
-    seatBelt !== null ||
-    handBrake !== null ||
-    comments.trim() !== "";
+    (brakes !== null ||
+      lights !== null ||
+      seatBelt !== null ||
+      handBrake !== null ||
+      comments.trim() !== "");
 
   const renderOption = (label, state, setState, iconName, iconType) => {
     let IconComponent;
@@ -196,10 +205,11 @@ export default function HomeScreen() {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} style={{ flex: 1 }}>
       <ScrollView
         style={{ flex: 1, backgroundColor: COLORS.white }}
-        keyboardShouldPersistTaps="always"
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
         <StatusBar
           barStyle="dark-content"
@@ -238,16 +248,27 @@ export default function HomeScreen() {
                   />
                 )}
               </View>
-              <Text style={styles.greeting}>Welcome!</Text>
+              <View style={styles.headerTextContainer}>
+                <Text style={styles.greeting}>Welcome!</Text>
+                <Text style={styles.date}>{today}</Text>
+              </View>
             </View>
 
-            <Text style={styles.date}>
-              Today's Date:{" "}
-              <Text style={{ fontFamily: "Medium" }}>{today}</Text>
-            </Text>
+            {/* Form Header */}
+            <View style={styles.formHeader}>
+              <View style={styles.formTitleContainer}>
+                <MaterialCommunityIcons
+                  name="clipboard-check-outline"
+                  size={RFPercentage(3.2)}
+                  color={COLORS.black}
+                />
+                <Text style={styles.formTitle}>Vehicle Inspection Form</Text>
+              </View>
+              {/* <View style={styles.formDivider} /> */}
+            </View>
 
             {/* Vehicle Registration */}
-            <View style={styles.inputContainer}>
+            <View style={[styles.inputContainer]}>
               <Text style={styles.inputLabel}>Vehicle Registration</Text>
               <TextInput
                 style={styles.input}
@@ -260,21 +281,13 @@ export default function HomeScreen() {
             </View>
 
             {/* Checklist Items */}
-            <Text
-              style={[styles.inputLabel, { marginBottom: RFPercentage(0) }]}
-            >
-              Inspection Report
-            </Text>
-            <Text
-              style={{
-                color: COLORS.gray2,
-                fontFamily: "Regular",
-                fontSize: RFPercentage(1.6),
-                marginBottom: RFPercentage(1),
-              }}
-            >
-              Select Pass/Fail For Each
-            </Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Inspection Report</Text>
+              <Text style={styles.sectionSubtitle}>
+                Select Pass/Fail For Each
+              </Text>
+            </View>
+
             {renderOption(
               "Brakes",
               brakes,
@@ -303,6 +316,7 @@ export default function HomeScreen() {
               "car-brake-retarder",
               "MaterialCommunityIcons"
             )}
+
             {/* Comments */}
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>Comments / Feedback</Text>
@@ -393,7 +407,11 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: RFPercentage(2),
+    marginBottom: RFPercentage(1),
+  },
+  headerTextContainer: {
+    marginLeft: RFPercentage(1.5),
+    flex: 1,
   },
   avatarContainer: {
     width: RFPercentage(7),
@@ -418,25 +436,57 @@ const styles = StyleSheet.create({
   greeting: {
     color: COLORS.black,
     fontFamily: "Headline",
-    fontSize: RFPercentage(2.2),
-    marginLeft: RFPercentage(1.5),
+    fontSize: RFPercentage(2.3),
   },
   date: {
     fontSize: RFPercentage(1.8),
     color: COLORS.gray3,
-    marginBottom: RFPercentage(3),
+    fontFamily: "Medium",
+    marginTop: RFPercentage(0.3),
+  },
+  // Form Header Styles
+  formHeader: {
+    marginVertical: RFPercentage(2),
+  },
+  formTitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: RFPercentage(1.5),
+  },
+  formTitle: {
+    color: COLORS.black,
+    fontFamily: "Bold",
+    fontSize: RFPercentage(2.2),
+    marginLeft: RFPercentage(1),
+    textAlign: "center",
+  },
+  formDivider: {
+    height: 2,
+    backgroundColor: COLORS.black,
+    width: "80%",
+    alignSelf: "center",
+    borderRadius: 2,
+  },
+  // Section Header
+  sectionHeader: {
+    marginBottom: RFPercentage(2),
+  },
+  sectionTitle: {
+    fontSize: RFPercentage(1.9),
+    color: COLORS.gray4,
     fontFamily: "SemiBold",
+    marginBottom: RFPercentage(0.5),
+  },
+  sectionSubtitle: {
+    color: COLORS.gray2,
+    fontFamily: "Regular",
+    fontSize: RFPercentage(1.6),
   },
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: RFPercentage(1.5),
-  },
-  sectionTitle: {
-    fontSize: RFPercentage(2.2),
-    color: COLORS.gray3,
-    fontFamily: "SemiBold",
-    marginBottom: RFPercentage(2),
   },
   inputContainer: {
     marginBottom: RFPercentage(2.5),
@@ -483,7 +533,6 @@ const styles = StyleSheet.create({
   cardLabel: {
     fontSize: RFPercentage(1.8),
     color: COLORS.gray3,
-    // marginBottom: RFPercentage(1.5),
     fontFamily: "SemiBold",
     marginLeft: RFPercentage(0.5),
   },
@@ -502,10 +551,10 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   passSelected: {
-    backgroundColor: COLORS.successLight,
+    backgroundColor: "#cff6e0ff",
   },
   failSelected: {
-    backgroundColor: COLORS.errorLight,
+    backgroundColor: "#fcdad7ff",
   },
   optionText: {
     color: COLORS.gray2,
@@ -543,7 +592,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#c8c5c5ff",
   },
   btnText: {
-    color: COLORS.gray3,
+    color: COLORS.white,
     fontSize: RFPercentage(1.9),
     fontFamily: "Medium",
   },
