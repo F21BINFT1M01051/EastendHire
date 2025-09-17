@@ -30,11 +30,12 @@ export default function Onboarding({ navigation }) {
       />
       <Image
         source={IMAGES.onBoarding}
-        resizeMode="contain"
+        resizeMode="cover"
         style={{
-          width: RFPercentage(50),
+          width: RFPercentage(40),
           height: RFPercentage(30),
           marginTop: RFPercentage(5),
+          borderRadius:RFPercentage(2)
         }}
       />
       <Text style={styles.title}>Welcome to Eastend Hire</Text>
